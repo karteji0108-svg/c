@@ -1,0 +1,51 @@
+    <!DOCTYPE html>
+    <html lang="id">
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>Register - KARTEJI</title>
+      <script src="https://cdn.tailwindcss.com"></script>
+      <link rel="stylesheet" href="assets/css/style.css" />
+      <link rel="stylesheet" href="assets/css/responsive.css" />
+    </head>
+    <body class="min-h-screen bg-slate-950 text-slate-50 flex flex-col" data-page="register">
+      <div id="navbar"></div>
+
+      <main class="flex-1 container mx-auto px-4 py-6">
+
+<section class="flex justify-center">
+  <div class="w-full max-w-md glass-panel space-y-6">
+    <div class="text-center space-y-2">
+      <h1 class="page-title text-2xl">Daftar Anggota KARTEJI</h1>
+      <p class="text-slate-300 text-sm">
+        Pendaftar pertama otomatis menjadi <span class="font-semibold">Super Admin</span>.
+      </p>
+    </div>
+    <form id="register-form" class="space-y-4 text-sm">
+      <div>
+        <label class="form-label">Nama Lengkap</label>
+        <input type="text" id="register-name" class="form-input" required />
+      </div>
+      <div>
+        <label class="form-label">Email</label>
+        <input type="email" id="register-email" class="form-input" required />
+      </div>
+      <div>
+        <label class="form-label">Password</label>
+        <input type="password" id="register-password" class="form-input" required minlength="6" />
+      </div>
+      <button type="submit" class="btn-primary w-full">Daftar</button>
+    </form>
+    <p class="text-xs text-center text-slate-400">
+      Sudah punya akun?
+      <a href="login.html" class="text-sky-300 hover:text-sky-200">Masuk di sini</a>
+    </p>
+  </div>
+</section>
+
+      </main>
+      <div id="back-button" class="mt-4"></div>
+      <div id="footer"></div>
+      <script type="module" src="assets/js/main.js"></script>
+    </body>
+    </html>

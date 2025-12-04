@@ -1,0 +1,29 @@
+    <!DOCTYPE html>
+    <html lang="id">
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>Galeri Anggota - KARTEJI</title>
+      <script src="https://cdn.tailwindcss.com"></script>
+      <link rel="stylesheet" href="../assets/css/style.css" />
+      <link rel="stylesheet" href="../assets/css/responsive.css" />
+    </head>
+    <body class="min-h-screen bg-slate-950 text-slate-50 flex flex-col" data-page="member-gallery">
+      <div id="navbar"></div>
+
+      <main class="flex-1 container mx-auto px-4 py-6">
+
+<div class="flex gap-6">
+  <aside id="sidebar-member" class="hidden md:block w-64"></aside>
+  <section class="flex-1 space-y-6">
+    <h1 class="page-title">Galeri Kegiatan</h1>
+    <div id="member-gallery-grid" class="grid sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
+  </section>
+</div>
+
+      </main>
+      <div id="back-button" class="mt-4"></div>
+      <div id="footer"></div>
+      <script type="module" src="../assets/js/main.js"></script>
+    </body>
+    </html>

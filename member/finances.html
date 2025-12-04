@@ -1,0 +1,45 @@
+    <!DOCTYPE html>
+    <html lang="id">
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>Transparansi Kas - KARTEJI</title>
+      <script src="https://cdn.tailwindcss.com"></script>
+      <link rel="stylesheet" href="../assets/css/style.css" />
+      <link rel="stylesheet" href="../assets/css/responsive.css" />
+    </head>
+    <body class="min-h-screen bg-slate-950 text-slate-50 flex flex-col" data-page="member-finances">
+      <div id="navbar"></div>
+
+      <main class="flex-1 container mx-auto px-4 py-6">
+
+<div class="flex gap-6">
+  <aside id="sidebar-member" class="hidden md:block w-64"></aside>
+  <section class="flex-1 space-y-6">
+    <h1 class="page-title">Transparansi Kas</h1>
+    <p class="text-slate-300 text-xs">
+      Anggota hanya dapat melihat (read-only) arus kas keluar dan masuk.
+    </p>
+    <div class="glass-panel p-4 overflow-x-auto">
+      <table class="min-w-full text-xs md:text-sm text-left">
+        <thead class="border-b border-slate-700 text-slate-300">
+          <tr>
+            <th class="py-2 pr-4">Tanggal</th>
+            <th class="py-2 pr-4">Keterangan</th>
+            <th class="py-2 pr-4">Tipe</th>
+            <th class="py-2 pr-4 text-right">Jumlah</th>
+          </tr>
+        </thead>
+        <tbody id="member-finances-table" class="divide-y divide-slate-800 text-slate-200">
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+      </main>
+      <div id="back-button" class="mt-4"></div>
+      <div id="footer"></div>
+      <script type="module" src="../assets/js/main.js"></script>
+    </body>
+    </html>

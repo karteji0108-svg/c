@@ -1,0 +1,45 @@
+    <!DOCTYPE html>
+    <html lang="id">
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>Dashboard - KARTEJI</title>
+      <script src="https://cdn.tailwindcss.com"></script>
+      <link rel="stylesheet" href="../assets/css/style.css" />
+      <link rel="stylesheet" href="../assets/css/responsive.css" />
+    </head>
+    <body class="min-h-screen bg-slate-950 text-slate-50 flex flex-col" data-page="dashboard-home">
+      <div id="navbar"></div>
+
+      <main class="flex-1 container mx-auto px-4 py-6">
+
+<div class="flex gap-6">
+  <aside id="sidebar-admin" class="hidden md:block w-64"></aside>
+  <section class="flex-1 space-y-6">
+    <h1 class="page-title">Dashboard Pengurus</h1>
+    <p class="text-slate-300 text-xs">
+      Ringkasan kegiatan, pengumuman, dan keuangan KARTEJI.
+    </p>
+    <div class="grid md:grid-cols-3 gap-4">
+      <div class="stat-pill">
+        <p class="stat-label">Kegiatan Aktif</p>
+        <p id="dash-stat-activities" class="stat-value">-</p>
+      </div>
+      <div class="stat-pill">
+        <p class="stat-label">Pengumuman</p>
+        <p id="dash-stat-announcements" class="stat-value">-</p>
+      </div>
+      <div class="stat-pill">
+        <p class="stat-label">Saldo Kas</p>
+        <p id="dash-stat-balance" class="stat-value">-</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+      </main>
+      <div id="back-button" class="mt-4"></div>
+      <div id="footer"></div>
+      <script type="module" src="../assets/js/main.js"></script>
+    </body>
+    </html>

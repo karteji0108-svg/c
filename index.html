@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KARTEJI - Karang Taruna Cilosari Barat</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="stylesheet" href="assets/css/responsive.css" />
+</head>
+<body class="min-h-screen bg-slate-950 text-slate-50 flex flex-col" data-page="home">
+  <div id="navbar"></div>
+
+  <main class="flex-1">
+    <section class="relative overflow-hidden">
+      <div class="absolute inset-0 opacity-40 pointer-events-none bg-[radial-gradient(circle_at_top,_#22d3ee_0,_transparent_55%),_radial-gradient(circle_at_bottom,_#4f46e5_0,_transparent_55%)]"></div>
+      <div class="relative container mx-auto px-4 py-16 md:py-24 flex flex-col md:flex-row items-center gap-10">
+        <div class="flex-1 space-y-6">
+          <span class="inline-flex items-center px-3 py-1 text-xs font-medium rounded-full bg-sky-500/10 text-sky-300 ring-1 ring-sky-400/30 mb-2">
+            KARTEJI • Karang Taruna Cilosari Barat
+          </span>
+          <h1 class="text-3xl md:text-5xl font-extrabold leading-tight tracking-tight">
+            Ruang Kreasi &amp; <span class="text-sky-400">Kolaborasi</span> Pemuda Cilosari Barat
+          </h1>
+          <p class="text-slate-300 max-w-xl">
+            Platform digital untuk mengelola kegiatan, pengumuman, dan transparansi kas
+            Karang Taruna Cilosari Barat secara modern, rapi, dan transparan.
+          </p>
+          <div class="flex flex-wrap gap-3">
+            <a href="login.html" class="btn-primary">
+              Masuk Anggota
+            </a>
+            <a href="about.html" class="btn-ghost">
+              Tentang KARTEJI
+            </a>
+          </div>
+          <div class="grid grid-cols-3 gap-4 text-xs md:text-sm text-slate-300 pt-4 border-t border-slate-800 max-w-md">
+            <div>
+              <p class="font-semibold text-slate-100">Kegiatan</p>
+              <p>Terdata dan terjadwal rapi.</p>
+            </div>
+            <div>
+              <p class="font-semibold text-slate-100">Pengumuman</p>
+              <p>Informasi satu pintu.</p>
+            </div>
+            <div>
+              <p class="font-semibold text-slate-100">Transparansi</p>
+              <p>Kas dapat dipantau anggota.</p>
+            </div>
+          </div>
+        </div>
+        <div class="flex-1">
+          <div class="relative max-w-md mx-auto">
+            <div class="glass-panel p-5 space-y-4">
+              <div class="flex items-center justify-between">
+                <p class="font-semibold text-sm">Ringkasan Hari Ini</p>
+                <span class="inline-flex items-center text-xs px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">
+                  Live
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 ml-1 animate-pulse"></span>
+                </span>
+              </div>
+              <div class="grid grid-cols-3 gap-4 text-xs">
+                <div class="stat-pill">
+                  <p class="text-slate-300">Kegiatan Aktif</p>
+                  <p id="stat-active-activities" class="text-xl font-bold text-sky-400">-</p>
+                </div>
+                <div class="stat-pill">
+                  <p class="text-slate-300">Pengumuman</p>
+                  <p id="stat-announcements" class="text-xl font-bold text-sky-400">-</p>
+                </div>
+                <div class="stat-pill">
+                  <p class="text-slate-300">Kas Terbaru</p>
+                  <p id="stat-latest-balance" class="text-xl font-bold text-sky-400">-</p>
+                </div>
+              </div>
+              <div class="space-y-2 text-xs">
+                <p class="font-semibold text-slate-200">Agenda Terdekat</p>
+                <ul id="home-upcoming-activities" class="space-y-1 text-slate-300">
+                  <li class="text-slate-500 text-[0.7rem]">Memuat agenda...</li>
+                </ul>
+              </div>
+              <a href="activities.html" class="inline-flex items-center gap-2 text-xs font-medium text-sky-300 hover:text-sky-200">
+                Lihat semua kegiatan
+                <span class="material-symbols-outlined text-base">arrow_right_alt</span>
+              </a>
+            </div>
+            <div class="absolute -inset-3 border border-sky-500/30 rounded-3xl -z-10 opacity-70 blur-xl"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="container mx-auto px-4 py-10 space-y-8">
+      <div class="grid md:grid-cols-3 gap-6">
+        <div class="feature-card">
+          <h3 class="feature-title">Agenda &amp; Kegiatan</h3>
+          <p class="feature-text">
+            Semua kegiatan KARTEJI tercatat rapi, lengkap dengan penanggung jawab, waktu, dan status.
+          </p>
+        </div>
+        <div class="feature-card">
+          <h3 class="feature-title">Pengumuman Terpusat</h3>
+          <p class="feature-text">
+            Pengumuman untuk anggota dan warga tersimpan di satu tempat yang mudah diakses.
+          </p>
+        </div>
+        <div class="feature-card">
+          <h3 class="feature-title">Transparansi Kas</h3>
+          <p class="feature-text">
+            Anggota dapat memantau arus kas keluar-masuk sehingga keuangan lebih transparan.
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div id="footer"></div>
+  <script type="module" src="assets/js/main.js"></script>
+</body>
+</html>

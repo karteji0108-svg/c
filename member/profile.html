@@ -1,0 +1,44 @@
+    <!DOCTYPE html>
+    <html lang="id">
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>Profil Anggota - KARTEJI</title>
+      <script src="https://cdn.tailwindcss.com"></script>
+      <link rel="stylesheet" href="../assets/css/style.css" />
+      <link rel="stylesheet" href="../assets/css/responsive.css" />
+    </head>
+    <body class="min-h-screen bg-slate-950 text-slate-50 flex flex-col" data-page="member-profile">
+      <div id="navbar"></div>
+
+      <main class="flex-1 container mx-auto px-4 py-6">
+
+<div class="flex gap-6">
+  <aside id="sidebar-member" class="hidden md:block w-64"></aside>
+  <section class="flex-1 space-y-6">
+    <h1 class="page-title">Profil Anggota</h1>
+    <div class="glass-panel space-y-4 text-sm">
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 rounded-full bg-sky-500/20 flex items-center justify-center text-lg font-semibold" id="profile-avatar">
+          AK
+        </div>
+        <div>
+          <p id="profile-name" class="font-semibold text-slate-100">-</p>
+          <p id="profile-role" class="text-xs text-sky-300 uppercase tracking-[0.18em]">-</p>
+        </div>
+      </div>
+      <div class="space-y-1 text-xs text-slate-300">
+        <p>Email: <span id="profile-email" class="text-slate-100">-</span></p>
+        <p>UID: <span id="profile-uid" class="text-slate-100">-</span></p>
+      </div>
+      <button id="logout-btn" class="btn-ghost w-full">Keluar</button>
+    </div>
+  </section>
+</div>
+
+      </main>
+      <div id="back-button" class="mt-4"></div>
+      <div id="footer"></div>
+      <script type="module" src="../assets/js/main.js"></script>
+    </body>
+    </html>

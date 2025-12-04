@@ -1,0 +1,5 @@
+@media (max-width: 640px) {
+  .glass-panel {
+    border-radius: 1rem;
+  }
+}

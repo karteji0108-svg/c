@@ -1,0 +1,45 @@
+<header class="border-b border-slate-800 bg-slate-950/80 backdrop-blur-md sticky top-0 z-40">
+  <div class="container mx-auto flex items-center justify-between px-4 py-3">
+    <a href="/index.html" class="flex items-center gap-2">
+      <span class="inline-flex items-center justify-center w-8 h-8 rounded-xl bg-sky-500/20 border border-sky-500/40 text-sky-300 text-xs font-semibold">
+        KJ
+      </span>
+      <div class="leading-tight">
+        <p class="text-sm font-semibold text-slate-50">KARTEJI</p>
+        <p class="text-[0.65rem] text-slate-400 uppercase tracking-[0.15em]">Cilosari Barat</p>
+      </div>
+    </a>
+    <nav class="hidden md:flex items-center gap-6 text-xs font-medium text-slate-300">
+      <a href="/index.html" class="nav-link" data-nav="home">Beranda</a>
+      <a href="/about.html" class="nav-link" data-nav="about">Tentang</a>
+      <a href="/activities.html" class="nav-link" data-nav="activities">Kegiatan</a>
+      <a href="/announcements.html" class="nav-link" data-nav="announcements">Pengumuman</a>
+      <a href="/gallery.html" class="nav-link" data-nav="gallery">Galeri</a>
+      <a href="/contact.html" class="nav-link" data-nav="contact">Kontak</a>
+    </nav>
+    <div class="hidden md:flex items-center gap-3">
+      <button id="theme-toggle" class="icon-btn" title="Toggle theme">
+        <span class="material-symbols-outlined text-base">brightness_6</span>
+      </button>
+      <a id="navbar-login-btn" href="/login.html" class="btn-small">Masuk</a>
+      <button id="navbar-user-menu" class="hidden icon-btn text-[0.65rem]"></button>
+    </div>
+    <button id="mobile-menu-toggle" class="md:hidden icon-btn">
+      <span class="material-symbols-outlined text-xl">menu</span>
+    </button>
+  </div>
+  <div id="mobile-menu" class="md:hidden border-t border-slate-800 bg-slate-950/95 backdrop-blur-md hidden">
+    <nav class="container mx-auto px-4 py-3 flex flex-col gap-2 text-sm text-slate-200">
+      <a href="/index.html" class="nav-link" data-nav="home">Beranda</a>
+      <a href="/about.html" class="nav-link" data-nav="about">Tentang</a>
+      <a href="/activities.html" class="nav-link" data-nav="activities">Kegiatan</a>
+      <a href="/announcements.html" class="nav-link" data-nav="announcements">Pengumuman</a>
+      <a href="/gallery.html" class="nav-link" data-nav="gallery">Galeri</a>
+      <a href="/contact.html" class="nav-link" data-nav="contact">Kontak</a>
+      <div class="pt-2 flex items-center gap-2">
+        <a id="mobile-login-btn" href="/login.html" class="btn-small flex-1 text-center">Masuk</a>
+        <button id="mobile-user-menu" class="hidden btn-ghost flex-1 text-xs">Profil</button>
+      </div>
+    </nav>
+  </div>
+</header>

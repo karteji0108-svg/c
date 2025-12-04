@@ -1,0 +1,52 @@
+    <!DOCTYPE html>
+    <html lang="id">
+    <head>
+      <meta charset="UTF-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <title>Kontak - KARTEJI</title>
+      <script src="https://cdn.tailwindcss.com"></script>
+      <link rel="stylesheet" href="assets/css/style.css" />
+      <link rel="stylesheet" href="assets/css/responsive.css" />
+    </head>
+    <body class="min-h-screen bg-slate-950 text-slate-50 flex flex-col" >
+      <div id="navbar"></div>
+
+      <main class="flex-1 container mx-auto px-4 py-6">
+
+<section class="space-y-6">
+  <h1 class="page-title">Kontak</h1>
+  <div class="grid md:grid-cols-2 gap-6">
+    <div class="space-y-4 text-slate-300 text-sm">
+      <p>
+        Untuk informasi lebih lanjut mengenai kegiatan KARTEJI atau kerja sama, silakan hubungi pengurus.
+      </p>
+      <ul class="space-y-2">
+        <li><span class="font-semibold text-slate-100">Alamat:</span> Cilosari Barat, Semarang</li>
+        <li><span class="font-semibold text-slate-100">WhatsApp:</span> 08xx-xxxx-xxxx</li>
+        <li><span class="font-semibold text-slate-100">Email:</span> karteji@example.com</li>
+      </ul>
+    </div>
+    <form class="glass-panel space-y-4 text-sm" id="contact-form">
+      <div>
+        <label class="form-label">Nama</label>
+        <input type="text" class="form-input" required />
+      </div>
+      <div>
+        <label class="form-label">Email</label>
+        <input type="email" class="form-input" required />
+      </div>
+      <div>
+        <label class="form-label">Pesan</label>
+        <textarea class="form-input min-h-[120px]" required></textarea>
+      </div>
+      <button type="submit" class="btn-primary w-full">Kirim Pesan</button>
+    </form>
+  </div>
+</section>
+
+      </main>
+      <div id="back-button" class="mt-4"></div>
+      <div id="footer"></div>
+      <script type="module" src="assets/js/main.js"></script>
+    </body>
+    </html>
