@@ -2,56 +2,99 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Ambil role user yang sedang login secara aman
     function userRole() {
-      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+      let path = /databases/$(database)/documents/users/$(request.auth.uid);
+      return exists(path) ? get(path).data.role : "";
     }
 
     function isRole(r) {
-      return request.auth != null && userRole() == r;
+      return request.auth != null
+             && userRole() == r;
     }
 
     function isAnyAdmin() {
-      return request.auth != null && userRole() in ['super_admin', 'ketua', 'wakil'];
+      return request.auth != null
+             && userRole() in ['super_admin', 'ketua', 'wakil'];
     }
 
     function isPengurus() {
-      return request.auth != null && userRole() in [
-        'super_admin', 'ketua', 'wakil', 'sekretaris', 'bendahara', 'sie'
-      ];
+      return request.auth != null
+             && userRole() in [
+               'super_admin',
+               'ketua',
+               'wakil',
+               'sekretaris',
+               'bendahara',
+               'sie'
+             ];
     }
 
+    // =======================
+    // USERS (account & role)
+    // =======================
     match /users/{uid} {
-      allow read: if request.auth != null && (uid == request.auth.uid || isAnyAdmin());
-      allow create: if request.auth != null;
-      allow update: if request.auth != null && (uid == request.auth.uid || isAnyAdmin());
+      // Baca: user bisa baca profil sendiri, atau admin bisa baca semua
+      allow read: if request.auth != null
+                  && (uid == request.auth.uid || isAnyAdmin());
+
+      // Create: hanya user itu sendiri yang boleh buat dokumennya
+      allow create: if request.auth != null
+                    && uid == request.auth.uid;
+
+      // Update: user boleh update dirinya sendiri, admin boleh update semua
+      allow update: if request.auth != null
+                    && (uid == request.auth.uid || isAnyAdmin());
+
+      // Delete: hanya super admin
       allow delete: if isRole('super_admin');
     }
 
+    // =======================
+    // ACTIVITIES
+    // =======================
     match /activities/{id} {
       allow read: if true;
-      allow create: if isRole('super_admin') || isRole('sekretaris') || isRole('sie');
+
+      allow create: if isRole('super_admin')
+                    || isRole('sekretaris')
+                    || isRole('sie');
+
       allow update: if isRole('super_admin')
                     || isRole('sekretaris')
                     || (isRole('ketua') && request.resource.data.status in ['approved', 'done'])
                     || (isRole('wakil') && request.resource.data.status in ['reviewed', 'rejected']);
+
       allow delete: if isAnyAdmin();
     }
 
+    // =======================
+    // FINANCIAL RECORDS
+    // =======================
     match /financial_records/{id} {
       allow read: if request.auth != null;
       allow create, update, delete: if isRole('super_admin') || isRole('bendahara');
     }
 
+    // =======================
+    // ANNOUNCEMENTS
+    // =======================
     match /announcements/{id} {
       allow read: if true;
       allow create, update, delete: if isPengurus();
     }
 
+    // =======================
+    // ALBUMS
+    // =======================
     match /albums/{id} {
       allow read: if true;
       allow create, update, delete: if isPengurus();
     }
 
+    // =======================
+    // GALLERIES
+    // =======================
     match /galleries/{id} {
       allow read: if true;
       allow create, update, delete: if isPengurus();
