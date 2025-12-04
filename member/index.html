@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Beranda Anggota - KARTEJI</title>
+
+  <meta name="description" content="Beranda anggota KARTEJI untuk melihat kegiatan, pengumuman, dan transparansi kas Karang Taruna Cilosari Barat.">
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Material Symbols (icon) -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@300;400;500" />
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <link rel="stylesheet" href="../assets/css/responsive.css" />
+
+  <style>
+    @keyframes fade-up {
+      0% { opacity: 0; transform: translateY(16px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    .anim-fade-up {
+      animation: fade-up 0.7s ease-out both;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-950 text-slate-50 flex flex-col font-sans antialiased" data-page="member-home">
+  <!-- Navbar (di-load via JS kalau kamu sudah buat sistem navbar) -->
+  <div id="navbar"></div>
+
+  <main class="flex-1 relative">
+    <!-- Background gradient -->
+    <div class="pointer-events-none fixed inset-0 opacity-40 bg-[radial-gradient(circle_at_top,_#22d3ee_0,_transparent_55%),_radial-gradient(circle_at_bottom,_#4f46e5_0,_transparent_55%)]"></div>
+
+    <div class="relative container mx-auto px-4 py-6 md:py-8 space-y-6">
+      <!-- Header salam -->
+      <section class="space-y-3 anim-fade-up">
+        <p class="text-[0.75rem] uppercase tracking-[0.18em] text-sky-300 font-medium">
+          Beranda Anggota KARTEJI
+        </p>
+        <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-3">
+          <div>
+            <h1 class="text-2xl md:text-3xl font-semibold tracking-tight">
+              Halo, <span id="member-greeting-name" class="text-sky-300">Anggota KARTEJI</span> 👋
+            </h1>
+            <p class="text-slate-300 text-xs md:text-sm max-w-xl mt-1">
+              Di sini kamu bisa melihat kegiatan terbaru, pengumuman penting, dan transparansi kas KARTEJI secara langsung.
+            </p>
+          </div>
+          <div class="text-xs text-slate-300">
+            <p id="member-role-label" class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-slate-900/70 border border-slate-700">
+              <span class="material-symbols-outlined text-[18px]">verified_user</span>
+              <span>Role: <span id="member-role-value" class="font-medium">Anggota</span></span>
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Stat ringkas -->
+      <section class="grid md:grid-cols-3 gap-4 anim-fade-up">
+        <div class="stat-pill">
+          <p class="stat-label flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-[18px]">event</span>
+            <span>Kegiatan Aktif</span>
+          </p>
+          <p id="member-stat-activities" class="stat-value">-</p>
+        </div>
+        <div class="stat-pill">
+          <p class="stat-label flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-[18px]">campaign</span>
+            <span>Pengumuman</span>
+          </p>
+          <p id="member-stat-announcements" class="stat-value">-</p>
+        </div>
+        <div class="stat-pill">
+          <p class="stat-label flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-[18px]">account_balance_wallet</span>
+            <span>Saldo Kas (Transparan)</span>
+          </p>
+          <p id="member-stat-balance" class="stat-value">-</p>
+        </div>
+      </section>
+
+      <!-- Konten utama: agenda & pengumuman -->
+      <section class="grid lg:grid-cols-3 gap-5 anim-fade-up">
+        <!-- Agenda terdekat -->
+        <div class="lg:col-span-2 glass-panel rounded-2xl border border-slate-700/70 shadow-lg overflow-hidden">
+          <div class="flex items-center justify-between px-4 py-3 border-b border-slate-800">
+            <div>
+              <p class="text-xs font-semibold text-slate-200 uppercase tracking-wide">
+                Agenda Kegiatan Terdekat
+              </p>
+              <p class="text-[0.7rem] text-slate-400">
+                Informasi kegiatan yang bisa kamu ikuti sebagai anggota.
+              </p>
+            </div>
+            <a
+              href="../dashboard/activities/list.html"
+              class="hidden md:inline-flex items-center gap-1 text-[0.7rem] text-sky-300 hover:text-sky-200"
+            >
+              Lihat semua
+              <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+            </a>
+          </div>
+          <div class="p-4">
+            <ul id="member-upcoming-activities" class="space-y-3 text-xs md:text-sm text-slate-200">
+              <li class="text-[0.75rem] text-slate-500">
+                Memuat agenda kegiatan...
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Pengumuman terbaru -->
+        <div class="glass-panel rounded-2xl border border-slate-700/70 shadow-lg overflow-hidden">
+          <div class="flex items-center justify-between px-4 py-3 border-b border-slate-800">
+            <div>
+              <p class="text-xs font-semibold text-slate-200 uppercase tracking-wide">
+                Pengumuman Terbaru
+              </p>
+              <p class="text-[0.7rem] text-slate-400">
+                Informasi penting dari pengurus KARTEJI.
+              </p>
+            </div>
+            <a
+              href="../dashboard/announcements/list.html"
+              class="hidden md:inline-flex items-center gap-1 text-[0.7rem] text-sky-300 hover:text-sky-200"
+            >
+              Lihat semua
+              <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+            </a>
+          </div>
+          <div class="p-4">
+            <ul id="member-latest-announcements" class="space-y-3 text-xs md:text-sm text-slate-200">
+              <li class="text-[0.75rem] text-slate-500">
+                Memuat pengumuman...
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- Catatan transparansi -->
+      <section class="anim-fade-up">
+        <div class="glass-panel rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-4 md:p-5 text-xs md:text-sm text-emerald-100 flex gap-3">
+          <span class="material-symbols-outlined text-[20px] md:text-[22px] mt-0.5">
+            visibility
+          </span>
+          <div>
+            <p class="font-semibold text-emerald-200 mb-1">
+              Transparansi Keuangan
+            </p>
+            <p>
+              Saldo kas di atas adalah ringkasan dari pemasukan dan pengeluaran yang dicatat pengurus.
+              Jika kamu ingin melihat detail transaksi, silakan hubungi Bendahara atau pengurus terkait.
+            </p>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <div id="back-button" class="mt-4"></div>
+  <div id="footer"></div>
+
+  <!-- JS utama -->
+  <script type="module" src="../assets/js/main.js"></script>
+</body>
+</html>
