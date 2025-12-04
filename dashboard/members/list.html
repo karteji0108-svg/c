@@ -1,44 +1,91 @@
-    <!DOCTYPE html>
-    <html lang="id">
-    <head>
-      <meta charset="UTF-8" />
-      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <title>Manajemen Anggota - KARTEJI</title>
-      <script src="https://cdn.tailwindcss.com"></script>
-      <link rel="stylesheet" href="../../assets/css/style.css" />
-      <link rel="stylesheet" href="../../assets/css/responsive.css" />
-    </head>
-    <body class="min-h-screen bg-slate-950 text-slate-50 flex flex-col" data-page="dashboard-members">
-      <div id="navbar"></div>
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Anggota & Pengurus - KARTEJI</title>
 
-      <main class="flex-1 container mx-auto px-4 py-6">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@300;400;500" />
 
-<div class="flex gap-6">
-  <aside id="sidebar-admin" class="hidden md:block w-64"></aside>
-  <section class="flex-1 space-y-4">
-    <h1 class="page-title">Manajemen Anggota</h1>
-    <p class="text-slate-300 text-xs">
-      Hanya Super Admin, Ketua, dan Wakil yang dapat mengubah role anggota.
-    </p>
-    <div class="glass-panel p-4 overflow-x-auto">
-      <table class="min-w-full text-xs md:text-sm text-left">
-        <thead class="border-b border-slate-700 text-slate-300">
-          <tr>
-            <th class="py-2 pr-4">Nama</th>
-            <th class="py-2 pr-4">Email</th>
-            <th class="py-2 pr-4">Peran</th>
-            <th class="py-2 pr-0 text-right">Aksi</th>
-          </tr>
-        </thead>
-        <tbody id="members-table-body" class="divide-y divide-slate-800 text-slate-200"></tbody>
-      </table>
+  <link rel="stylesheet" href="../../assets/css/style.css" />
+  <link rel="stylesheet" href="../../assets/css/responsive.css" />
+</head>
+<body class="min-h-screen bg-slate-950 text-slate-50 flex flex-col font-sans antialiased" data-page="dashboard-members">
+  <div id="navbar"></div>
+
+  <main class="flex-1 relative">
+    <div class="pointer-events-none fixed inset-0 opacity-40 bg-[radial-gradient(circle_at_top,_#22d3ee_0,_transparent_55%),_radial-gradient(circle_at_bottom,_#4f46e5_0,_transparent_55%)]"></div>
+
+    <div class="relative container mx-auto px-4 py-6 md:py-8 flex flex-col md:flex-row gap-6">
+      <!-- Sidebar reuse dari dashboard -->
+      <aside id="sidebar-admin" class="w-full md:w-64 md:shrink-0 md:sticky md:top-24 space-y-4">
+        <!-- Sidebar akan diisi / disesuaikan role oleh JS (opsional bisa pakai include/JS) -->
+        <!-- Atau bisa copy blok sidebar dari dashboard/index.html dan sesuaikan path -->
+      </aside>
+
+      <section class="flex-1 space-y-5">
+        <header class="space-y-1">
+          <h1 class="page-title text-xl md:text-2xl font-semibold">
+            Anggota &amp; Pengurus KARTEJI
+          </h1>
+          <p class="text-slate-300 text-xs md:text-sm">
+            Kelola data anggota, status aktif, dan role kepengurusan.
+          </p>
+        </header>
+
+        <!-- Info akses berdasarkan role -->
+        <div id="members-access-message" class="text-xs md:text-sm text-slate-300"></div>
+
+        <!-- Tabel anggota -->
+        <div id="members-table-wrapper" class="glass-panel rounded-2xl border border-slate-700/70 overflow-hidden shadow-lg hidden">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 px-4 py-3 border-b border-slate-800">
+            <div>
+              <p class="text-xs font-semibold text-slate-200 uppercase tracking-wide">
+                Daftar Anggota
+              </p>
+              <p class="text-[0.7rem] text-slate-400">
+                Hanya dapat diakses oleh Super Admin, Ketua, dan Wakil Ketua.
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <input
+                id="members-search"
+                type="text"
+                class="form-input h-8 text-xs"
+                placeholder="Cari nama atau email..."
+              />
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="min-w-full text-xs md:text-sm">
+              <thead class="bg-slate-900/60 border-b border-slate-800 text-slate-300">
+                <tr>
+                  <th class="px-4 py-2 text-left font-medium">Nama</th>
+                  <th class="px-4 py-2 text-left font-medium">Email</th>
+                  <th class="px-4 py-2 text-left font-medium">Role</th>
+                  <th class="px-4 py-2 text-left font-medium">Status</th>
+                  <th class="px-4 py-2 text-right font-medium">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="members-table-body" class="divide-y divide-slate-800">
+                <tr>
+                  <td colspan="5" class="px-4 py-4 text-center text-xs text-slate-500">
+                    Memuat data anggota...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
     </div>
-  </section>
-</div>
+  </main>
 
-      </main>
-      <div id="back-button" class="mt-4"></div>
-      <div id="footer"></div>
-      <script type="module" src="../../assets/js/main.js"></script>
-    </body>
-    </html>
+  <div id="back-button" class="mt-4"></div>
+  <div id="footer"></div>
+
+  <script type="module" src="../../assets/js/main.js"></script>
+</body>
+</html>
