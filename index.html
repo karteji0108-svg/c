@@ -1,120 +1,283 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="scroll-smooth">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <title>KARTEJI - Karang Taruna Cilosari Barat</title>
+  <meta name="description" content="KARTEJI adalah platform digital Karang Taruna Cilosari Barat untuk mengelola kegiatan, pengumuman, dan transparansi kas secara modern dan rapi.">
+
+  <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Material Symbols (untuk icon) -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@300;400;500" />
+
+  <!-- Custom CSS -->
   <link rel="stylesheet" href="assets/css/style.css" />
   <link rel="stylesheet" href="assets/css/responsive.css" />
+
+  <!-- Animasi custom ringan -->
+  <style>
+    @keyframes float-soft {
+      0%   { transform: translateY(0); }
+      50%  { transform: translateY(-8px); }
+      100% { transform: translateY(0); }
+    }
+
+    @keyframes fade-up {
+      0% {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fade-right {
+      0% {
+        opacity: 0;
+        transform: translateX(-16px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes slow-pulse-glow {
+      0%, 100% {
+        opacity: 0.45;
+        filter: blur(26px);
+      }
+      50% {
+        opacity: 0.9;
+        filter: blur(32px);
+      }
+    }
+
+    .anim-float-soft {
+      animation: float-soft 8s ease-in-out infinite;
+    }
+
+    .anim-fade-up {
+      animation: fade-up 0.8s ease-out both;
+    }
+
+    .anim-fade-up-delay-1 {
+      animation: fade-up 0.9s ease-out 0.12s both;
+    }
+
+    .anim-fade-up-delay-2 {
+      animation: fade-up 1s ease-out 0.22s both;
+    }
+
+    .anim-fade-right {
+      animation: fade-right 0.8s ease-out 0.15s both;
+    }
+
+    .anim-glow-pulse {
+      animation: slow-pulse-glow 9s ease-in-out infinite;
+    }
+  </style>
 </head>
-<body class="min-h-screen bg-slate-950 text-slate-50 flex flex-col" data-page="home">
+<body class="min-h-screen bg-slate-950 text-slate-50 flex flex-col font-sans antialiased" data-page="home">
+  <!-- Navbar di-load via JS -->
   <div id="navbar"></div>
 
   <main class="flex-1">
+    <!-- HERO SECTION -->
     <section class="relative overflow-hidden">
-      <div class="absolute inset-0 opacity-40 pointer-events-none bg-[radial-gradient(circle_at_top,_#22d3ee_0,_transparent_55%),_radial-gradient(circle_at_bottom,_#4f46e5_0,_transparent_55%)]"></div>
-      <div class="relative container mx-auto px-4 py-16 md:py-24 flex flex-col md:flex-row items-center gap-10">
-        <div class="flex-1 space-y-6">
-          <span class="inline-flex items-center px-3 py-1 text-xs font-medium rounded-full bg-sky-500/10 text-sky-300 ring-1 ring-sky-400/30 mb-2">
+      <!-- Background gradient & glow -->
+      <div class="absolute inset-0 opacity-50 pointer-events-none bg-[radial-gradient(circle_at_top,_#22d3ee_0,_transparent_55%),_radial-gradient(circle_at_bottom,_#4f46e5_0,_transparent_55%)]"></div>
+      <div class="absolute inset-y-0 left-1/2 w-[40rem] -translate-x-1/2 bg-gradient-to-r from-sky-500/10 via-cyan-400/5 to-indigo-500/10 blur-3xl opacity-60 pointer-events-none anim-glow-pulse"></div>
+
+      <div class="relative container mx-auto px-4 py-16 md:py-24 lg:py-28 flex flex-col md:flex-row items-center gap-10 lg:gap-14">
+        <!-- LEFT: Text -->
+        <div class="flex-1 space-y-6 md:space-y-7 anim-fade-up">
+          <span class="inline-flex items-center px-3 py-1 text-xs font-medium rounded-full bg-sky-500/10 text-sky-300 ring-1 ring-sky-400/30 backdrop-blur">
+            <span class="w-1.5 h-1.5 rounded-full bg-sky-400 mr-1 animate-pulse"></span>
             KARTEJI • Karang Taruna Cilosari Barat
           </span>
-          <h1 class="text-3xl md:text-5xl font-extrabold leading-tight tracking-tight">
-            Ruang Kreasi &amp; <span class="text-sky-400">Kolaborasi</span> Pemuda Cilosari Barat
-          </h1>
-          <p class="text-slate-300 max-w-xl">
-            Platform digital untuk mengelola kegiatan, pengumuman, dan transparansi kas
-            Karang Taruna Cilosari Barat secara modern, rapi, dan transparan.
-          </p>
-          <div class="flex flex-wrap gap-3">
-            <a href="login.html" class="btn-primary">
-              Masuk Anggota
+
+          <div class="space-y-3">
+            <h1 id="hero-title" class="text-3xl md:text-5xl lg:text-6xl font-extrabold leading-tight tracking-tight">
+              Ruang Kreasi &amp; <span class="text-sky-400">Kolaborasi</span><br class="hidden md:block" />
+              Pemuda Cilosari Barat
+            </h1>
+            <p class="text-slate-300 max-w-xl text-sm md:text-base">
+              Platform digital untuk mengelola kegiatan, pengumuman, dan transparansi kas
+              Karang Taruna Cilosari Barat secara modern, rapi, dan dapat dipantau bersama.
+            </p>
+          </div>
+
+          <!-- CTA Buttons -->
+          <div class="flex flex-wrap gap-3 pt-2 anim-fade-up-delay-1">
+            <a
+              href="login.html"
+              class="btn-primary inline-flex items-center justify-center gap-2 transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-sky-500/25"
+              aria-label="Masuk sebagai anggota KARTEJI"
+            >
+              <span>Masuk Anggota</span>
+              <span class="material-symbols-outlined text-sm">login</span>
             </a>
-            <a href="about.html" class="btn-ghost">
-              Tentang KARTEJI
+            <a
+              href="about.html"
+              class="btn-ghost inline-flex items-center justify-center gap-2 transition-transform duration-300 hover:-translate-y-0.5 hover:shadow-lg hover:shadow-slate-500/20"
+            >
+              <span>Tentang KARTEJI</span>
+              <span class="material-symbols-outlined text-sm">info</span>
             </a>
           </div>
-          <div class="grid grid-cols-3 gap-4 text-xs md:text-sm text-slate-300 pt-4 border-t border-slate-800 max-w-md">
-            <div>
+
+          <!-- Small feature bullets -->
+          <div class="grid grid-cols-3 gap-4 text-xs md:text-sm text-slate-300 pt-4 border-t border-slate-800 max-w-md anim-fade-up-delay-2">
+            <div class="space-y-0.5">
               <p class="font-semibold text-slate-100">Kegiatan</p>
               <p>Terdata dan terjadwal rapi.</p>
             </div>
-            <div>
+            <div class="space-y-0.5">
               <p class="font-semibold text-slate-100">Pengumuman</p>
               <p>Informasi satu pintu.</p>
             </div>
-            <div>
+            <div class="space-y-0.5">
               <p class="font-semibold text-slate-100">Transparansi</p>
               <p>Kas dapat dipantau anggota.</p>
             </div>
           </div>
         </div>
-        <div class="flex-1">
-          <div class="relative max-w-md mx-auto">
-            <div class="glass-panel p-5 space-y-4">
-              <div class="flex items-center justify-between">
-                <p class="font-semibold text-sm">Ringkasan Hari Ini</p>
-                <span class="inline-flex items-center text-xs px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">
+
+        <!-- RIGHT: Summary Card -->
+        <div class="flex-1 w-full anim-fade-right">
+          <div class="relative max-w-md mx-auto anim-float-soft">
+            <div class="glass-panel p-5 md:p-6 space-y-4 rounded-3xl shadow-xl border border-slate-700/60 transition-transform duration-300 hover:-translate-y-1 hover:shadow-2xl hover:shadow-sky-500/30">
+              <div class="flex items-center justify-between gap-3">
+                <p class="font-semibold text-sm md:text-base text-slate-50">
+                  Ringkasan Hari Ini
+                </p>
+                <span class="inline-flex items-center text-[0.7rem] md:text-xs px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">
                   Live
                   <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 ml-1 animate-pulse"></span>
                 </span>
               </div>
-              <div class="grid grid-cols-3 gap-4 text-xs">
-                <div class="stat-pill">
+
+              <!-- Stats -->
+              <div class="grid grid-cols-3 gap-4 text-xs md:text-sm" aria-label="Statistik ringkasan hari ini">
+                <div class="stat-pill transition-transform duration-300 hover:-translate-y-0.5 hover:bg-slate-800/60">
                   <p class="text-slate-300">Kegiatan Aktif</p>
-                  <p id="stat-active-activities" class="text-xl font-bold text-sky-400">-</p>
+                  <p
+                    id="stat-active-activities"
+                    class="text-xl md:text-2xl font-bold text-sky-400 tracking-tight"
+                  >
+                    -
+                  </p>
                 </div>
-                <div class="stat-pill">
+                <div class="stat-pill transition-transform duration-300 hover:-translate-y-0.5 hover:bg-slate-800/60">
                   <p class="text-slate-300">Pengumuman</p>
-                  <p id="stat-announcements" class="text-xl font-bold text-sky-400">-</p>
+                  <p
+                    id="stat-announcements"
+                    class="text-xl md:text-2xl font-bold text-sky-400 tracking-tight"
+                  >
+                    -
+                  </p>
                 </div>
-                <div class="stat-pill">
+                <div class="stat-pill transition-transform duration-300 hover:-translate-y-0.5 hover:bg-slate-800/60">
                   <p class="text-slate-300">Kas Terbaru</p>
-                  <p id="stat-latest-balance" class="text-xl font-bold text-sky-400">-</p>
+                  <p
+                    id="stat-latest-balance"
+                    class="text-xl md:text-2xl font-bold text-sky-400 tracking-tight"
+                  >
+                    -
+                  </p>
                 </div>
               </div>
-              <div class="space-y-2 text-xs">
+
+              <!-- Upcoming Agenda -->
+              <div class="space-y-2 text-xs md:text-sm">
                 <p class="font-semibold text-slate-200">Agenda Terdekat</p>
-                <ul id="home-upcoming-activities" class="space-y-1 text-slate-300">
+                <ul
+                  id="home-upcoming-activities"
+                  class="space-y-1.5 text-slate-300 text-[0.7rem] md:text-xs"
+                  aria-live="polite"
+                >
                   <li class="text-slate-500 text-[0.7rem]">Memuat agenda...</li>
                 </ul>
               </div>
-              <a href="activities.html" class="inline-flex items-center gap-2 text-xs font-medium text-sky-300 hover:text-sky-200">
+
+              <a
+                href="activities.html"
+                class="inline-flex items-center gap-2 text-xs md:text-sm font-medium text-sky-300 hover:text-sky-100 transition-colors"
+              >
                 Lihat semua kegiatan
                 <span class="material-symbols-outlined text-base">arrow_right_alt</span>
               </a>
             </div>
-            <div class="absolute -inset-3 border border-sky-500/30 rounded-3xl -z-10 opacity-70 blur-xl"></div>
+
+            <!-- Glow border / outline -->
+            <div class="pointer-events-none absolute -inset-3 rounded-3xl -z-10 opacity-70 blur-xl bg-gradient-to-tr from-sky-500/40 via-cyan-400/30 to-indigo-500/40 anim-glow-pulse"></div>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="container mx-auto px-4 py-10 space-y-8">
+    <!-- FEATURE SECTION -->
+    <section class="container mx-auto px-4 py-10 md:py-14 space-y-8">
+      <header class="space-y-2 max-w-xl anim-fade-up">
+        <h2 class="text-xl md:text-2xl font-semibold text-slate-50">
+          Apa saja yang bisa dilakukan di KARTEJI?
+        </h2>
+        <p class="text-sm md:text-base text-slate-400">
+          Satu platform untuk mengatur kegiatan, menyebarkan informasi, dan memastikan kas
+          Karang Taruna transparan bagi seluruh anggota.
+        </p>
+      </header>
+
       <div class="grid md:grid-cols-3 gap-6">
-        <div class="feature-card">
-          <h3 class="feature-title">Agenda &amp; Kegiatan</h3>
+        <div class="feature-card group anim-fade-up-delay-1 transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-sky-500/20">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="material-symbols-outlined text-lg md:text-xl transition-transform duration-300 group-hover:scale-110">
+              event
+            </span>
+            <h3 class="feature-title">Agenda &amp; Kegiatan</h3>
+          </div>
           <p class="feature-text">
-            Semua kegiatan KARTEJI tercatat rapi, lengkap dengan penanggung jawab, waktu, dan status.
+            Semua kegiatan KARTEJI tercatat rapi, lengkap dengan penanggung jawab, waktu, dan status pelaksanaan.
           </p>
         </div>
-        <div class="feature-card">
-          <h3 class="feature-title">Pengumuman Terpusat</h3>
+
+        <div class="feature-card group anim-fade-up-delay-2 transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-sky-500/20">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="material-symbols-outlined text-lg md:text-xl transition-transform duration-300 group-hover:scale-110">
+              campaign
+            </span>
+            <h3 class="feature-title">Pengumuman Terpusat</h3>
+          </div>
           <p class="feature-text">
-            Pengumuman untuk anggota dan warga tersimpan di satu tempat yang mudah diakses.
+            Pengumuman untuk anggota dan warga tersimpan di satu tempat yang mudah diakses, kapan pun dibutuhkan.
           </p>
         </div>
-        <div class="feature-card">
-          <h3 class="feature-title">Transparansi Kas</h3>
+
+        <div class="feature-card group anim-fade-up-delay-2 transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-sky-500/20">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="material-symbols-outlined text-lg md:text-xl transition-transform duration-300 group-hover:scale-110">
+              account_balance_wallet
+            </span>
+            <h3 class="feature-title">Transparansi Kas</h3>
+          </div>
           <p class="feature-text">
-            Anggota dapat memantau arus kas keluar-masuk sehingga keuangan lebih transparan.
+            Anggota dapat memantau arus kas keluar-masuk sehingga keuangan lebih transparan dan dapat dipercaya bersama.
           </p>
         </div>
       </div>
     </section>
   </main>
 
+  <!-- Footer di-load via JS -->
   <div id="footer"></div>
+
+  <!-- Main JS -->
   <script type="module" src="assets/js/main.js"></script>
 </body>
 </html>
