@@ -18,6 +18,8 @@ import {
   doc,
   setDoc,
   updateDoc,
+  addDoc,
+  deleteDoc,
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 // =====================================================
@@ -47,6 +49,9 @@ try {
 // Init Auth & Firestore
 const auth = getAuth(app);
 const db = getFirestore(app);
+
+// Simpan user global kalau perlu
+window.KARTEJI_USER = null;
 
 // =====================================================
 // Konstanta Role & Helper UI
@@ -140,14 +145,11 @@ if (registerForm) {
     }
 
     try {
-      // 1) Buat akun Auth
       const cred = await createUserWithEmailAndPassword(auth, email, password);
       const user = cred.user;
 
-      // 2) Default role = anggota
       let role = "anggota";
 
-      // 3) Coba cek apakah ini user pertama
       try {
         const first = await isFirstUser();
         if (first) {
@@ -157,7 +159,6 @@ if (registerForm) {
         console.warn("Gagal cek user pertama, pakai role default 'anggota'", eInner);
       }
 
-      // 4) Simpan profil user di Firestore -> koleksi "users"
       await setDoc(doc(db, "users", user.uid), {
         uid: user.uid,
         name,
@@ -173,7 +174,6 @@ if (registerForm) {
           : "Pendaftaran berhasil. Akun kamu terdaftar sebagai anggota."
       );
 
-      // 5) Redirect ke login
       window.location.href = "login.html";
     } catch (err) {
       console.error("Register error:", err);
@@ -295,46 +295,42 @@ onAuthStateChanged(auth, async (user) => {
   const dataPage = document.body.dataset.page || "";
 
   if (!user) {
-    // Tidak login tapi di area internal -> lempar ke login
     if (isDashboard || isMemberHome) {
       window.location.href = "../login.html";
     }
     return;
   }
 
+  window.KARTEJI_USER = user;
+
   const role = await fetchCurrentUserRole(user);
   window.KARTEJI_ROLE = role;
 
-  // Sesuaikan sidebar/menu (kalau ada)
   applyRoleToSidebarUI(role);
 
-  // Kalau anggota biasa & masuk dashboard pengurus, lempar ke homepage anggota
   if (isDashboard && role === "anggota") {
     alert("Dashboard ini khusus pengurus. Akun kamu adalah anggota biasa.");
     window.location.href = "../member/index.html";
     return;
   }
 
-  // =======================
   // Inisialisasi per halaman
-  // =======================
-
-  // Dashboard home (pengurus)
   if (dataPage === "dashboard-home") {
     initDashboardHome(role);
   }
 
-  // Halaman members (pengurus)
   if (dataPage === "dashboard-members") {
     initMembersPage(role);
   }
 
-  // Homepage anggota biasa
+  if (dataPage === "dashboard-activities") {
+    initActivitiesPage(role);
+  }
+
   if (dataPage === "member-home") {
     initMemberHome(user, role);
   }
 
-  // Homepage publik (index.html) – hanya isi stat kalau user sudah login
   if (dataPage === "home") {
     initPublicHome(user, role);
   }
@@ -367,7 +363,7 @@ async function initDashboardHome(role) {
 }
 
 // =====================================================
-// HOMEPAGE ANGGOTA: statistik + daftar kegiatan/pengumuman
+// HOMEPAGE ANGGOTA
 // =====================================================
 async function initMemberHome(user, role) {
   const nameEl = document.getElementById("member-greeting-name");
@@ -378,23 +374,20 @@ async function initMemberHome(user, role) {
   const activitiesListEl = document.getElementById("member-upcoming-activities");
   const announcementsListEl = document.getElementById("member-latest-announcements");
 
-  // Isi nama
   try {
     const snap = await getDoc(doc(db, "users", user.uid));
     if (snap.exists()) {
       const data = snap.data();
       if (nameEl) nameEl.textContent = data.name || "Anggota KARTEJI";
-    } else {
-      if (nameEl) nameEl.textContent = "Anggota KARTEJI";
+    } else if (nameEl) {
+      nameEl.textContent = "Anggota KARTEJI";
     }
   } catch (e) {
     console.error("Gagal ambil profil anggota:", e);
     if (nameEl) nameEl.textContent = "Anggota KARTEJI";
   }
 
-  if (roleLabelEl) {
-    roleLabelEl.textContent = ROLE_LABELS[role] || role || "Anggota";
-  }
+  if (roleLabelEl) roleLabelEl.textContent = ROLE_LABELS[role] || role || "Anggota";
 
   if (activitiesStatEl) activitiesStatEl.textContent = "...";
   if (announcementsStatEl) announcementsStatEl.textContent = "...";
@@ -412,7 +405,7 @@ async function initMemberHome(user, role) {
     if (balanceStatEl) balanceStatEl.textContent = "-";
   }
 
-  // Agenda Kegiatan
+  // Agenda
   if (activitiesListEl) {
     activitiesListEl.innerHTML = `
       <li class="text-[0.75rem] text-slate-500">
@@ -423,12 +416,11 @@ async function initMemberHome(user, role) {
     try {
       const snap = await getDocs(collection(db, "activities"));
       const activities = [];
-
       snap.forEach((docSnap) => {
         const data = docSnap.data() || {};
         activities.push({
           id: docSnap.id,
-          title: data.title || data.nama || "Kegiatan Tanpa Judul",
+          title: data.name || data.title || "Kegiatan Tanpa Judul",
           location: data.location || data.tempat || "",
           status: (data.status || "").toString(),
           rawDate: data.date || data.tanggal || data.createdAt || null,
@@ -502,7 +494,6 @@ async function initMemberHome(user, role) {
     try {
       const snap = await getDocs(collection(db, "announcements"));
       const ann = [];
-
       snap.forEach((docSnap) => {
         const data = docSnap.data() || {};
         ann.push({
@@ -566,7 +557,7 @@ async function initMemberHome(user, role) {
 }
 
 // =====================================================
-// HOMEPAGE PUBLIC (index.html) – stat & agenda jika user sudah login
+// HOMEPAGE PUBLIC (index.html)
 // =====================================================
 async function initPublicHome(user, role) {
   const activitiesEl = document.getElementById("stat-active-activities");
@@ -600,12 +591,11 @@ async function initPublicHome(user, role) {
     try {
       const snap = await getDocs(collection(db, "activities"));
       const activities = [];
-
       snap.forEach((docSnap) => {
         const data = docSnap.data() || {};
         activities.push({
           id: docSnap.id,
-          title: data.title || data.nama || "Kegiatan Tanpa Judul",
+          title: data.name || data.title || "Kegiatan Tanpa Judul",
           rawDate: data.date || data.tanggal || data.createdAt || null,
         });
       });
@@ -681,7 +671,6 @@ async function initMembersPage(currentUserRole) {
   try {
     const snap = await getDocs(collection(db, "users"));
     const members = [];
-
     snap.forEach((docSnap) => {
       const data = docSnap.data();
       members.push({
@@ -795,18 +784,12 @@ function renderMembersTable(list, tbody, currentUserRole) {
   };
 }
 
-// =====================================================
-// Ubah Role Anggota (prompt sederhana)
-// =====================================================
+// Ubah Role
 async function openRoleChangePrompt(memberId, memberName, currentRole, currentUserRole) {
   let availableRoles = [...ROLE_OPTIONS];
 
-  // Ketua & Wakil:
-  // - Tidak boleh mengubah siapa pun jadi super_admin
-  // - Tidak boleh mengubah role user yang sudah super_admin
   if (currentUserRole !== "super_admin") {
     availableRoles = availableRoles.filter((r) => r !== "super_admin");
-
     if (currentRole === "super_admin") {
       alert("Role Super Admin hanya dapat diubah oleh Super Admin lain.");
       return;
@@ -849,4 +832,282 @@ async function updateMemberRole(memberId, newRole) {
     console.error("Gagal mengubah role:", e);
     alert("Gagal mengubah role. Cek koneksi atau Firestore rules.");
   }
+}
+
+// =====================================================
+// Halaman: dashboard/activities/list.html (CRUD)
+// =====================================================
+async function initActivitiesPage(currentUserRole) {
+  const tableBody = document.getElementById("activities-table-body");
+  const btnOpenModal = document.getElementById("btn-open-activity-modal");
+  const modal = document.getElementById("activity-modal");
+  const modalTitle = document.getElementById("activity-modal-title");
+  const form = document.getElementById("activity-form");
+
+  const fieldId = document.getElementById("activity-id");
+  const fieldName = document.getElementById("activity-name");
+  const fieldDate = document.getElementById("activity-date");
+  const fieldTime = document.getElementById("activity-time");
+  const fieldLocation = document.getElementById("activity-location");
+  const fieldOwner = document.getElementById("activity-owner");
+  const fieldStatus = document.getElementById("activity-status");
+  const fieldDesc = document.getElementById("activity-description");
+  const fieldImage = document.getElementById("activity-image");
+
+  if (!tableBody || !modal || !form) return;
+
+  const canCreate = ["super_admin", "sekretaris", "sie"].includes(currentUserRole);
+  const canEdit = ["super_admin", "sekretaris", "ketua", "wakil", "sie"].includes(currentUserRole);
+  const canDelete = ["super_admin", "ketua", "wakil"].includes(currentUserRole);
+
+  if (!canCreate && btnOpenModal) {
+    btnOpenModal.classList.add("hidden");
+  }
+
+  let activitiesCache = [];
+
+  function openModal(mode = "create", activity = null) {
+    if (mode === "create") {
+      modalTitle.textContent = "Tambah Kegiatan";
+      fieldId.value = "";
+      fieldName.value = "";
+      fieldDate.value = "";
+      fieldTime.value = "";
+      fieldLocation.value = "";
+      fieldOwner.value = "";
+      fieldStatus.value = "draft";
+      fieldDesc.value = "";
+      if (fieldImage) fieldImage.value = "";
+    } else if (mode === "edit" && activity) {
+      modalTitle.textContent = "Edit Kegiatan";
+      fieldId.value = activity.id || "";
+      fieldName.value = activity.name || "";
+      fieldDate.value = activity.date || "";
+      fieldTime.value = activity.time || "";
+      fieldLocation.value = activity.location || "";
+      fieldOwner.value = activity.owner || "";
+      fieldStatus.value = activity.status || "draft";
+      fieldDesc.value = activity.description || "";
+      if (fieldImage) fieldImage.value = "";
+    }
+
+    modal.classList.remove("hidden");
+  }
+
+  function closeModal() {
+    modal.classList.add("hidden");
+  }
+
+  async function loadActivities() {
+    tableBody.innerHTML = `
+      <tr>
+        <td colspan="5" class="px-4 py-4 text-center text-xs text-slate-500">
+          Memuat data kegiatan...
+        </td>
+      </tr>
+    `;
+
+    try {
+      const snap = await getDocs(collection(db, "activities"));
+      const list = [];
+      snap.forEach((docSnap) => {
+        const data = docSnap.data() || {};
+        list.push({
+          id: docSnap.id,
+          name: data.name || data.title || "Tanpa Judul",
+          date: data.date || "",
+          time: data.time || "",
+          status: data.status || "draft",
+          location: data.location || "",
+          owner: data.owner || data.pic || "",
+          description: data.description || "",
+        });
+      });
+
+      activitiesCache = list;
+      renderActivities(list);
+    } catch (e) {
+      console.error("Gagal memuat kegiatan:", e);
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="5" class="px-4 py-4 text-center text-xs text-red-400">
+            Gagal memuat data kegiatan. Cek koneksi atau Firestore rules.
+          </td>
+        </tr>
+      `;
+    }
+  }
+
+  function renderActivities(list) {
+    tableBody.innerHTML = "";
+
+    if (!list.length) {
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="5" class="px-4 py-4 text-center text-xs text-slate-500">
+            Belum ada kegiatan tercatat.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    list.forEach((act) => {
+      const tr = document.createElement("tr");
+      tr.dataset.id = act.id;
+
+      const statusClassMap = {
+        draft: "bg-slate-700/70 text-slate-200 border-slate-500",
+        proposed: "bg-sky-500/15 text-sky-300 border-sky-400/60",
+        reviewed: "bg-amber-500/15 text-amber-300 border-amber-400/60",
+        approved: "bg-emerald-500/15 text-emerald-300 border-emerald-400/60",
+        done: "bg-emerald-600/15 text-emerald-200 border-emerald-500/70",
+      };
+
+      const statusKey = (act.status || "draft").toLowerCase();
+      const statusClass = statusClassMap[statusKey] || statusClassMap.draft;
+
+      tr.innerHTML = `
+        <td class="py-2 pr-4 align-top">
+          <div class="flex flex-col">
+            <span class="font-medium text-slate-50 text-xs md:text-sm">${act.name}</span>
+            <span class="text-[0.7rem] text-slate-400 line-clamp-2">${act.description || ""}</span>
+          </div>
+        </td>
+        <td class="py-2 pr-4 align-top text-[0.75rem] text-slate-300">
+          ${act.date ? formatDateShort(act.date) : "-"}<br />
+          <span class="text-slate-400">${act.time || ""}</span>
+        </td>
+        <td class="py-2 pr-4 align-top">
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[0.7rem] border ${statusClass}">
+            ${act.status}
+          </span>
+        </td>
+        <td class="py-2 pr-4 align-top text-[0.75rem] text-slate-200">
+          <span class="block">${act.owner || "-"}</span>
+          <span class="block text-slate-400 text-[0.7rem]">${act.location || ""}</span>
+        </td>
+        <td class="py-2 pr-0 align-top text-right">
+          <div class="inline-flex gap-2 text-[0.7rem]">
+            ${
+              canEdit
+                ? `<button
+                     class="px-2 py-1 rounded-md bg-slate-800/70 border border-slate-600 hover:bg-slate-700/80 transition-colors"
+                     data-action="edit-activity"
+                   >Edit</button>`
+                : ""
+            }
+            ${
+              canDelete
+                ? `<button
+                     class="px-2 py-1 rounded-md bg-rose-600/20 border border-rose-500/60 text-rose-200 hover:bg-rose-600/30 transition-colors"
+                     data-action="delete-activity"
+                   >Hapus</button>`
+                : ""
+            }
+          </div>
+        </td>
+      `;
+
+      tableBody.appendChild(tr);
+    });
+  }
+
+  // Event: buka modal tambah
+  if (btnOpenModal && canCreate) {
+    btnOpenModal.addEventListener("click", () => openModal("create"));
+  }
+
+  // Event: close modal
+  modal.querySelectorAll("[data-close-modal], .modal-backdrop").forEach((el) => {
+    el.addEventListener("click", () => closeModal());
+  });
+
+  // Submit form (create/update)
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const id = fieldId.value || null;
+    const name = fieldName.value.trim();
+    const date = fieldDate.value;
+    const time = fieldTime.value;
+    const location = fieldLocation.value.trim();
+    const owner = fieldOwner.value.trim();
+    const status = fieldStatus.value || "draft";
+    const description = fieldDesc.value.trim();
+
+    if (!name || !date || !time) {
+      alert("Nama, tanggal, dan waktu wajib diisi.");
+      return;
+    }
+
+    const payload = {
+      name,
+      date,
+      time,
+      location,
+      owner,
+      status,
+      description,
+      updatedAt: new Date().toISOString(),
+    };
+
+    if (window.KARTEJI_USER) {
+      payload.updatedBy = window.KARTEJI_USER.uid;
+      if (!id) {
+        payload.createdAt = new Date().toISOString();
+        payload.createdBy = window.KARTEJI_USER.uid;
+      }
+    }
+
+    // TODO: upload gambar ke Storage dan simpan imageUrl di payload
+    // jika fieldImage.files[0] ada.
+
+    try {
+      if (id) {
+        await updateDoc(doc(db, "activities", id), payload);
+      } else {
+        await addDoc(collection(db, "activities"), payload);
+      }
+
+      closeModal();
+      await loadActivities();
+    } catch (e) {
+      console.error("Gagal menyimpan kegiatan:", e);
+      alert("Gagal menyimpan data kegiatan. Cek koneksi atau Firestore rules.");
+    }
+  });
+
+  // Event aksi di tabel (edit / delete)
+  tableBody.addEventListener("click", async (e) => {
+    const editBtn = e.target.closest("[data-action='edit-activity']");
+    const deleteBtn = e.target.closest("[data-action='delete-activity']");
+    const row = e.target.closest("tr");
+    if (!row) return;
+    const id = row.dataset.id;
+
+    if (editBtn && canEdit) {
+      const act = activitiesCache.find((a) => a.id === id);
+      if (!act) return;
+      openModal("edit", act);
+    }
+
+    if (deleteBtn && canDelete) {
+      const act = activitiesCache.find((a) => a.id === id);
+      const name = act?.name || "kegiatan ini";
+      const ok = confirm(`Yakin ingin menghapus ${name}?`);
+      if (!ok) return;
+
+      try {
+        await deleteDoc(doc(db, "activities", id));
+        await loadActivities();
+      } catch (e) {
+        console.error("Gagal menghapus kegiatan:", e);
+        alert("Gagal menghapus kegiatan. Cek koneksi atau Firestore rules.");
+      }
+    }
+  });
+
+  // Load awal
+  loadActivities();
 }
