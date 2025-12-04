@@ -18,9 +18,6 @@ import {
   doc,
   setDoc,
   updateDoc,
-  query,
-  orderBy,
-  limit,
 } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
 // =====================================================
@@ -39,7 +36,7 @@ const firebaseConfig = {
 // Init Firebase
 const app = initializeApp(firebaseConfig);
 
-// Analytics (opsional, kadang error kalau bukan https/localhost)
+// Analytics (opsional)
 let analytics = null;
 try {
   analytics = getAnalytics(app);
@@ -82,6 +79,21 @@ function formatRupiah(value) {
     currency: "IDR",
     maximumFractionDigits: 0,
   });
+}
+
+// Format tanggal singkat
+function formatDateShort(value) {
+  try {
+    const d = value instanceof Date ? value : new Date(value);
+    if (Number.isNaN(d.getTime())) return "-";
+    return d.toLocaleDateString("id-ID", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  } catch {
+    return "-";
+  }
 }
 
 // Terapkan tampilan role di sidebar & sembunyikan menu yang tidak boleh
@@ -132,11 +144,20 @@ if (registerForm) {
       const cred = await createUserWithEmailAndPassword(auth, email, password);
       const user = cred.user;
 
-      // 2) Cek apakah ini user pertama
-      const first = await isFirstUser();
-      const role = first ? "super_admin" : "anggota";
+      // 2) Default role = anggota
+      let role = "anggota";
 
-      // 3) Simpan profil user di Firestore -> koleksi "users"
+      // 3) Coba cek apakah ini user pertama
+      try {
+        const first = await isFirstUser();
+        if (first) {
+          role = "super_admin";
+        }
+      } catch (eInner) {
+        console.warn("Gagal cek user pertama, pakai role default 'anggota'", eInner);
+      }
+
+      // 4) Simpan profil user di Firestore -> koleksi "users"
       await setDoc(doc(db, "users", user.uid), {
         uid: user.uid,
         name,
@@ -147,12 +168,12 @@ if (registerForm) {
       });
 
       alert(
-        first
+        role === "super_admin"
           ? "Pendaftaran berhasil. Kamu menjadi Super Admin pertama KARTEJI."
           : "Pendaftaran berhasil. Akun kamu terdaftar sebagai anggota."
       );
 
-      // 4) Redirect ke login
+      // 5) Redirect ke login
       window.location.href = "login.html";
     } catch (err) {
       console.error("Register error:", err);
@@ -162,7 +183,7 @@ if (registerForm) {
 }
 
 // =====================================================
-// LOGIN
+// LOGIN (role-aware redirect)
 // =====================================================
 const loginForm = document.getElementById("login-form");
 
@@ -182,8 +203,13 @@ if (loginForm) {
       const cred = await signInWithEmailAndPassword(auth, email, password);
       console.log("Login berhasil:", cred.user.uid);
 
-      // Arahkan ke dashboard pengurus
-      window.location.href = "dashboard/index.html";
+      const role = await fetchCurrentUserRole(cred.user);
+
+      if (role === "anggota" || !role) {
+        window.location.href = "member/index.html";
+      } else {
+        window.location.href = "dashboard/index.html";
+      }
     } catch (err) {
       console.error("Login error:", err);
       alert("Email atau password salah, atau akun belum terdaftar.");
@@ -207,61 +233,17 @@ async function fetchCurrentUserRole(user) {
 }
 
 // =====================================================
-// Auth state listener (dipakai di semua halaman)
-// =====================================================
-onAuthStateChanged(auth, async (user) => {
-  const path = window.location.pathname;
-  const isDashboard = path.includes("/dashboard/");
-
-  if (!user) {
-    // Tidak login tapi di area dashboard -> lempar ke login
-    if (isDashboard) {
-      window.location.href = "../login.html";
-    }
-    return;
-  }
-
-  const role = await fetchCurrentUserRole(user);
-  window.KARTEJI_ROLE = role;
-
-  // Sesuaikan sidebar/menu
-  applyRoleToSidebarUI(role);
-
-  // Kalau cuma anggota biasa & masuk dashboard pengurus
-  if (isDashboard && role === "anggota") {
-    alert("Dashboard ini khusus pengurus. Akun kamu adalah anggota biasa.");
-    window.location.href = "../index.html";
-    return;
-  }
-
-  // Dashboard home (dashboard/index.html)
-  if (document.body.dataset.page === "dashboard-home") {
-    initDashboardHome(role);
-  }
-
-  // Halaman members
-  if (document.body.dataset.page === "dashboard-members") {
-    initMembersPage(role);
-  }
-
-  // Di sini nanti bisa ditambah:
-  // if (document.body.dataset.page === "dashboard-activities") { ... }
-  // if (document.body.dataset.page === "dashboard-finances") { ... }
-});
-
-// =====================================================
-// DASHBOARD HOME: statistik kegiatan, pengumuman, kas
+// DASHBOARD STATS (dipakai banyak halaman)
 // =====================================================
 async function fetchDashboardStats() {
   try {
-    // Ambil beberapa data dasar untuk statistik
     const [activitiesSnap, announcementsSnap, financesSnap] = await Promise.all([
       getDocs(collection(db, "activities")),
       getDocs(collection(db, "announcements")),
       getDocs(collection(db, "financial_records")),
     ]);
 
-    // Hitung kegiatan aktif (status planned/ongoing/active/aktif/berjalan)
+    // Hitung kegiatan aktif
     let activeActivities = 0;
     activitiesSnap.forEach((docSnap) => {
       const data = docSnap.data() || {};
@@ -275,7 +257,7 @@ async function fetchDashboardStats() {
     // Jumlah pengumuman
     const announcementsCount = announcementsSnap.size || 0;
 
-    // Hitung saldo kas dari financial_records
+    // Hitung saldo kas
     let balance = 0;
     financesSnap.forEach((docSnap) => {
       const data = docSnap.data() || {};
@@ -289,8 +271,6 @@ async function fetchDashboardStats() {
         balance += rawAmount;
       } else if (isExpense) {
         balance -= rawAmount;
-      } else {
-        // kalau type tidak jelas, bisa di-skip atau dianggap 0
       }
     });
 
@@ -305,6 +285,64 @@ async function fetchDashboardStats() {
   }
 }
 
+// =====================================================
+// Auth state listener (dipakai di semua halaman)
+// =====================================================
+onAuthStateChanged(auth, async (user) => {
+  const path = window.location.pathname;
+  const isDashboard = path.includes("/dashboard/");
+  const isMemberHome = path.includes("/member/");
+  const dataPage = document.body.dataset.page || "";
+
+  if (!user) {
+    // Tidak login tapi di area internal -> lempar ke login
+    if (isDashboard || isMemberHome) {
+      window.location.href = "../login.html";
+    }
+    return;
+  }
+
+  const role = await fetchCurrentUserRole(user);
+  window.KARTEJI_ROLE = role;
+
+  // Sesuaikan sidebar/menu (kalau ada)
+  applyRoleToSidebarUI(role);
+
+  // Kalau anggota biasa & masuk dashboard pengurus, lempar ke homepage anggota
+  if (isDashboard && role === "anggota") {
+    alert("Dashboard ini khusus pengurus. Akun kamu adalah anggota biasa.");
+    window.location.href = "../member/index.html";
+    return;
+  }
+
+  // =======================
+  // Inisialisasi per halaman
+  // =======================
+
+  // Dashboard home (pengurus)
+  if (dataPage === "dashboard-home") {
+    initDashboardHome(role);
+  }
+
+  // Halaman members (pengurus)
+  if (dataPage === "dashboard-members") {
+    initMembersPage(role);
+  }
+
+  // Homepage anggota biasa
+  if (dataPage === "member-home") {
+    initMemberHome(user, role);
+  }
+
+  // Homepage publik (index.html) – hanya isi stat kalau user sudah login
+  if (dataPage === "home") {
+    initPublicHome(user, role);
+  }
+});
+
+// =====================================================
+// DASHBOARD HOME: statistik kegiatan, pengumuman, kas
+// =====================================================
 async function initDashboardHome(role) {
   const activitiesEl = document.getElementById("dash-stat-activities");
   const announcementsEl = document.getElementById("dash-stat-announcements");
@@ -312,7 +350,6 @@ async function initDashboardHome(role) {
 
   if (!activitiesEl || !announcementsEl || !balanceEl) return;
 
-  // Tampilan awal (loading)
   activitiesEl.textContent = "...";
   announcementsEl.textContent = "...";
   balanceEl.textContent = "...";
@@ -330,6 +367,293 @@ async function initDashboardHome(role) {
 }
 
 // =====================================================
+// HOMEPAGE ANGGOTA: statistik + daftar kegiatan/pengumuman
+// =====================================================
+async function initMemberHome(user, role) {
+  const nameEl = document.getElementById("member-greeting-name");
+  const roleLabelEl = document.getElementById("member-role-value");
+  const activitiesStatEl = document.getElementById("member-stat-activities");
+  const announcementsStatEl = document.getElementById("member-stat-announcements");
+  const balanceStatEl = document.getElementById("member-stat-balance");
+  const activitiesListEl = document.getElementById("member-upcoming-activities");
+  const announcementsListEl = document.getElementById("member-latest-announcements");
+
+  // Isi nama
+  try {
+    const snap = await getDoc(doc(db, "users", user.uid));
+    if (snap.exists()) {
+      const data = snap.data();
+      if (nameEl) nameEl.textContent = data.name || "Anggota KARTEJI";
+    } else {
+      if (nameEl) nameEl.textContent = "Anggota KARTEJI";
+    }
+  } catch (e) {
+    console.error("Gagal ambil profil anggota:", e);
+    if (nameEl) nameEl.textContent = "Anggota KARTEJI";
+  }
+
+  if (roleLabelEl) {
+    roleLabelEl.textContent = ROLE_LABELS[role] || role || "Anggota";
+  }
+
+  if (activitiesStatEl) activitiesStatEl.textContent = "...";
+  if (announcementsStatEl) announcementsStatEl.textContent = "...";
+  if (balanceStatEl) balanceStatEl.textContent = "...";
+
+  try {
+    const stats = await fetchDashboardStats();
+    if (activitiesStatEl) activitiesStatEl.textContent = stats.activeActivities;
+    if (announcementsStatEl) announcementsStatEl.textContent = stats.announcementsCount;
+    if (balanceStatEl) balanceStatEl.textContent = formatRupiah(stats.balance);
+  } catch (e) {
+    console.error("Gagal ambil stats untuk member:", e);
+    if (activitiesStatEl) activitiesStatEl.textContent = "-";
+    if (announcementsStatEl) announcementsStatEl.textContent = "-";
+    if (balanceStatEl) balanceStatEl.textContent = "-";
+  }
+
+  // Agenda Kegiatan
+  if (activitiesListEl) {
+    activitiesListEl.innerHTML = `
+      <li class="text-[0.75rem] text-slate-500">
+        Memuat agenda kegiatan...
+      </li>
+    `;
+
+    try {
+      const snap = await getDocs(collection(db, "activities"));
+      const activities = [];
+
+      snap.forEach((docSnap) => {
+        const data = docSnap.data() || {};
+        activities.push({
+          id: docSnap.id,
+          title: data.title || data.nama || "Kegiatan Tanpa Judul",
+          location: data.location || data.tempat || "",
+          status: (data.status || "").toString(),
+          rawDate: data.date || data.tanggal || data.createdAt || null,
+        });
+      });
+
+      if (!activities.length) {
+        activitiesListEl.innerHTML = `
+          <li class="text-[0.75rem] text-slate-500">
+            Belum ada kegiatan yang tercatat.
+          </li>
+        `;
+      } else {
+        activities.sort((a, b) => {
+          const da = a.rawDate ? new Date(a.rawDate) : new Date(0);
+          const db = b.rawDate ? new Date(b.rawDate) : new Date(0);
+          return da - db;
+        });
+
+        const limited = activities.slice(0, 3);
+        activitiesListEl.innerHTML = "";
+
+        limited.forEach((act) => {
+          const li = document.createElement("li");
+          li.className =
+            "flex flex-col gap-0.5 border-b border-slate-800/80 last:border-none pb-3 last:pb-0";
+
+          const statusLower = act.status.toLowerCase();
+          const activeStatuses = ["planned", "ongoing", "active", "aktif", "berjalan"];
+          const isActive = activeStatuses.includes(statusLower);
+
+          li.innerHTML = `
+            <div class="flex items-center justify-between gap-2">
+              <p class="font-medium text-slate-50 text-xs md:text-sm">
+                ${act.title}
+              </p>
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[0.65rem] ${
+                isActive
+                  ? "bg-emerald-500/10 text-emerald-300 border border-emerald-500/40"
+                  : "bg-slate-700/70 text-slate-200 border border-slate-600"
+              }">
+                ${act.status || "Info"}
+              </span>
+            </div>
+            <p class="text-[0.7rem] text-slate-400">
+              ${formatDateShort(act.rawDate)}${act.location ? " • " + act.location : ""}
+            </p>
+          `;
+
+          activitiesListEl.appendChild(li);
+        });
+      }
+    } catch (e) {
+      console.error("Gagal load activities untuk member:", e);
+      activitiesListEl.innerHTML = `
+        <li class="text-[0.75rem] text-red-400">
+          Gagal memuat agenda. Coba muat ulang halaman.
+        </li>
+      `;
+    }
+  }
+
+  // Pengumuman
+  if (announcementsListEl) {
+    announcementsListEl.innerHTML = `
+      <li class="text-[0.75rem] text-slate-500">
+        Memuat pengumuman...
+      </li>
+    `;
+
+    try {
+      const snap = await getDocs(collection(db, "announcements"));
+      const ann = [];
+
+      snap.forEach((docSnap) => {
+        const data = docSnap.data() || {};
+        ann.push({
+          id: docSnap.id,
+          title: data.title || data.judul || "Pengumuman Tanpa Judul",
+          excerpt: data.content || data.isi || "",
+          rawDate: data.createdAt || data.date || data.tanggal || null,
+        });
+      });
+
+      if (!ann.length) {
+        announcementsListEl.innerHTML = `
+          <li class="text-[0.75rem] text-slate-500">
+            Belum ada pengumuman yang ditampilkan.
+          </li>
+        `;
+      } else {
+        ann.sort((a, b) => {
+          const da = a.rawDate ? new Date(a.rawDate) : new Date(0);
+          const db = b.rawDate ? new Date(b.rawDate) : new Date(0);
+          return db - da;
+        });
+
+        const limited = ann.slice(0, 3);
+        announcementsListEl.innerHTML = "";
+
+        limited.forEach((an) => {
+          const li = document.createElement("li");
+          li.className =
+            "flex flex-col gap-0.5 border-b border-slate-800/80 last:border-none pb-3 last:pb-0";
+
+          const shortContent =
+            (an.excerpt || "").length > 110
+              ? an.excerpt.slice(0, 110) + "..."
+              : an.excerpt || "Tidak ada isi pengumuman.";
+
+          li.innerHTML = `
+            <p class="font-medium text-slate-50 text-xs md:text-sm">
+              ${an.title}
+            </p>
+            <p class="text-[0.7rem] text-slate-400">
+              ${formatDateShort(an.rawDate)}
+            </p>
+            <p class="text-[0.75rem] text-slate-300">
+              ${shortContent}
+            </p>
+          `;
+
+          announcementsListEl.appendChild(li);
+        });
+      }
+    } catch (e) {
+      console.error("Gagal load announcements untuk member:", e);
+      announcementsListEl.innerHTML = `
+        <li class="text-[0.75rem] text-red-400">
+          Gagal memuat pengumuman. Coba muat ulang halaman.
+        </li>
+      `;
+    }
+  }
+}
+
+// =====================================================
+// HOMEPAGE PUBLIC (index.html) – stat & agenda jika user sudah login
+// =====================================================
+async function initPublicHome(user, role) {
+  const activitiesEl = document.getElementById("stat-active-activities");
+  const announcementsEl = document.getElementById("stat-announcements");
+  const balanceEl = document.getElementById("stat-latest-balance");
+  const agendaListEl = document.getElementById("home-upcoming-activities");
+
+  if (activitiesEl) activitiesEl.textContent = "...";
+  if (announcementsEl) announcementsEl.textContent = "...";
+  if (balanceEl) balanceEl.textContent = "...";
+
+  try {
+    const stats = await fetchDashboardStats();
+    if (activitiesEl) activitiesEl.textContent = stats.activeActivities;
+    if (announcementsEl) announcementsEl.textContent = stats.announcementsCount;
+    if (balanceEl) balanceEl.textContent = formatRupiah(stats.balance);
+  } catch (e) {
+    console.error("Gagal ambil stats untuk homepage:", e);
+    if (activitiesEl) activitiesEl.textContent = "-";
+    if (announcementsEl) announcementsEl.textContent = "-";
+    if (balanceEl) balanceEl.textContent = "-";
+  }
+
+  if (agendaListEl) {
+    agendaListEl.innerHTML = `
+      <li class="text-[0.7rem] text-slate-500">
+        Memuat agenda...
+      </li>
+    `;
+
+    try {
+      const snap = await getDocs(collection(db, "activities"));
+      const activities = [];
+
+      snap.forEach((docSnap) => {
+        const data = docSnap.data() || {};
+        activities.push({
+          id: docSnap.id,
+          title: data.title || data.nama || "Kegiatan Tanpa Judul",
+          rawDate: data.date || data.tanggal || data.createdAt || null,
+        });
+      });
+
+      if (!activities.length) {
+        agendaListEl.innerHTML = `
+          <li class="text-[0.7rem] text-slate-500">
+            Belum ada agenda terdekat.
+          </li>
+        `;
+      } else {
+        activities.sort((a, b) => {
+          const da = a.rawDate ? new Date(a.rawDate) : new Date(0);
+          const db = b.rawDate ? new Date(b.rawDate) : new Date(0);
+          return da - db;
+        });
+
+        const limited = activities.slice(0, 3);
+        agendaListEl.innerHTML = "";
+
+        limited.forEach((act) => {
+          const li = document.createElement("li");
+          li.className = "flex items-center justify-between gap-2 text-[0.7rem]";
+
+          li.innerHTML = `
+            <span class="text-slate-200 truncate max-w-[70%]">
+              ${act.title}
+            </span>
+            <span class="text-slate-400">
+              ${formatDateShort(act.rawDate)}
+            </span>
+          `;
+
+          agendaListEl.appendChild(li);
+        });
+      }
+    } catch (e) {
+      console.error("Gagal load activities untuk homepage:", e);
+      agendaListEl.innerHTML = `
+        <li class="text-[0.7rem] text-red-400">
+          Gagal memuat agenda. Coba muat ulang halaman.
+        </li>
+      `;
+    }
+  }
+}
+
+// =====================================================
 // Halaman: dashboard/members/list.html
 // =====================================================
 async function initMembersPage(currentUserRole) {
@@ -340,7 +664,6 @@ async function initMembersPage(currentUserRole) {
 
   if (!accessMsg || !tableWrapper || !tbody) return;
 
-  // Hanya super_admin, ketua, wakil yang boleh lihat daftar anggota
   const canManageMembers = ["super_admin", "ketua", "wakil"].includes(currentUserRole);
 
   if (!canManageMembers) {
@@ -372,7 +695,6 @@ async function initMembersPage(currentUserRole) {
 
     renderMembersTable(members, tbody, currentUserRole);
 
-    // Search sederhana di client
     if (searchInput) {
       searchInput.addEventListener("input", () => {
         const q = searchInput.value.toLowerCase();
@@ -458,7 +780,6 @@ function renderMembersTable(list, tbody, currentUserRole) {
     tbody.appendChild(tr);
   });
 
-  // Event delegation untuk tombol "Ubah Role"
   tbody.onclick = (e) => {
     const btn = e.target.closest("button[data-action='change-role']");
     if (!btn) return;
