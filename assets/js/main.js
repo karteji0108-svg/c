@@ -50,8 +50,9 @@ try {
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// Simpan user global kalau perlu
+// Simpan global
 window.KARTEJI_USER = null;
+window.KARTEJI_ROLE = null;
 
 // =====================================================
 // Konstanta Role & Helper UI
@@ -76,7 +77,6 @@ const ROLE_OPTIONS = [
   "anggota",
 ];
 
-// Format Rupiah untuk saldo kas
 function formatRupiah(value) {
   const n = Number(value) || 0;
   return n.toLocaleString("id-ID", {
@@ -86,7 +86,6 @@ function formatRupiah(value) {
   });
 }
 
-// Format tanggal singkat
 function formatDateShort(value) {
   try {
     const d = value instanceof Date ? value : new Date(value);
@@ -101,7 +100,6 @@ function formatDateShort(value) {
   }
 }
 
-// Terapkan tampilan role di sidebar & sembunyikan menu yang tidak boleh
 function applyRoleToSidebarUI(role) {
   const badge = document.getElementById("current-role-badge");
   if (badge) {
@@ -123,7 +121,7 @@ function applyRoleToSidebarUI(role) {
 // =====================================================
 async function isFirstUser() {
   const snap = await getDocs(collection(db, "users"));
-  return snap.empty; // true kalau belum ada dokumen user sama sekali
+  return snap.empty;
 }
 
 // =====================================================
@@ -149,14 +147,11 @@ if (registerForm) {
       const user = cred.user;
 
       let role = "anggota";
-
       try {
         const first = await isFirstUser();
-        if (first) {
-          role = "super_admin";
-        }
+        if (first) role = "super_admin";
       } catch (eInner) {
-        console.warn("Gagal cek user pertama, pakai role default 'anggota'", eInner);
+        console.warn("Gagal cek user pertama, pakai role 'anggota'", eInner);
       }
 
       await setDoc(doc(db, "users", user.uid), {
@@ -201,8 +196,6 @@ if (loginForm) {
 
     try {
       const cred = await signInWithEmailAndPassword(auth, email, password);
-      console.log("Login berhasil:", cred.user.uid);
-
       const role = await fetchCurrentUserRole(cred.user);
 
       if (role === "anggota" || !role) {
@@ -243,21 +236,16 @@ async function fetchDashboardStats() {
       getDocs(collection(db, "financial_records")),
     ]);
 
-    // Hitung kegiatan aktif
     let activeActivities = 0;
     activitiesSnap.forEach((docSnap) => {
       const data = docSnap.data() || {};
       const status = (data.status || "").toString().toLowerCase();
       const activeStatuses = ["planned", "ongoing", "active", "aktif", "berjalan"];
-      if (activeStatuses.includes(status)) {
-        activeActivities += 1;
-      }
+      if (activeStatuses.includes(status)) activeActivities += 1;
     });
 
-    // Jumlah pengumuman
     const announcementsCount = announcementsSnap.size || 0;
 
-    // Hitung saldo kas
     let balance = 0;
     financesSnap.forEach((docSnap) => {
       const data = docSnap.data() || {};
@@ -267,18 +255,11 @@ async function fetchDashboardStats() {
       const isIncome = ["in", "income", "masuk", "pemasukan"].includes(type);
       const isExpense = ["out", "expense", "keluar", "pengeluaran"].includes(type);
 
-      if (isIncome) {
-        balance += rawAmount;
-      } else if (isExpense) {
-        balance -= rawAmount;
-      }
+      if (isIncome) balance += rawAmount;
+      else if (isExpense) balance -= rawAmount;
     });
 
-    return {
-      activeActivities,
-      announcementsCount,
-      balance,
-    };
+    return { activeActivities, announcementsCount, balance };
   } catch (e) {
     console.error("Gagal mengambil statistik dashboard:", e);
     throw e;
@@ -327,6 +308,14 @@ onAuthStateChanged(auth, async (user) => {
     initActivitiesPage(role);
   }
 
+  if (dataPage === "dashboard-announcements") {
+    initAnnouncementsPage(role);
+  }
+
+  if (dataPage === "dashboard-finances") {
+    initFinancesPage(role);
+  }
+
   if (dataPage === "member-home") {
     initMemberHome(user, role);
   }
@@ -337,7 +326,7 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 // =====================================================
-// DASHBOARD HOME: statistik kegiatan, pengumuman, kas
+// DASHBOARD HOME
 // =====================================================
 async function initDashboardHome(role) {
   const activitiesEl = document.getElementById("dash-stat-activities");
@@ -665,7 +654,6 @@ async function initMembersPage(currentUserRole) {
 
   accessMsg.textContent =
     "Kamu memiliki akses penuh untuk melihat dan mengelola data anggota.";
-
   tableWrapper.classList.remove("hidden");
 
   try {
@@ -784,7 +772,6 @@ function renderMembersTable(list, tbody, currentUserRole) {
   };
 }
 
-// Ubah Role
 async function openRoleChangePrompt(memberId, memberName, currentRole, currentUserRole) {
   let availableRoles = [...ROLE_OPTIONS];
 
@@ -801,7 +788,8 @@ async function openRoleChangePrompt(memberId, memberName, currentRole, currentUs
     .join(", ");
 
   const newRole = prompt(
-    `Ubah role untuk:\n${memberName}\n\nRole saat ini: ${currentRole} (${ROLE_LABELS[currentRole] || currentRole})\n\nMasukkan role baru (${labelList}):`,
+    `Ubah role untuk:\n${memberName}\n\nRole saat ini: ${currentRole} (${ROLE_LABELS[currentRole] ||
+      currentRole})\n\nMasukkan role baru (${labelList}):`,
     currentRole
   );
 
@@ -815,7 +803,8 @@ async function openRoleChangePrompt(memberId, memberName, currentRole, currentUs
   }
 
   const ok = confirm(
-    `Yakin mengubah role ${memberName} dari "${ROLE_LABELS[currentRole] || currentRole}" menjadi "${ROLE_LABELS[trimmed] || trimmed}"?`
+    `Yakin mengubah role ${memberName} dari "${ROLE_LABELS[currentRole] ||
+      currentRole}" menjadi "${ROLE_LABELS[trimmed] || trimmed}"?`
   );
   if (!ok) return;
 
@@ -835,7 +824,7 @@ async function updateMemberRole(memberId, newRole) {
 }
 
 // =====================================================
-// Halaman: dashboard/activities/list.html (CRUD)
+// Halaman: dashboard/activities/list.html (CRUD Kegiatan)
 // =====================================================
 async function initActivitiesPage(currentUserRole) {
   const tableBody = document.getElementById("activities-table-body");
@@ -1013,17 +1002,14 @@ async function initActivitiesPage(currentUserRole) {
     });
   }
 
-  // Event: buka modal tambah
   if (btnOpenModal && canCreate) {
     btnOpenModal.addEventListener("click", () => openModal("create"));
   }
 
-  // Event: close modal
   modal.querySelectorAll("[data-close-modal], .modal-backdrop").forEach((el) => {
     el.addEventListener("click", () => closeModal());
   });
 
-  // Submit form (create/update)
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
@@ -1060,8 +1046,7 @@ async function initActivitiesPage(currentUserRole) {
       }
     }
 
-    // TODO: upload gambar ke Storage dan simpan imageUrl di payload
-    // jika fieldImage.files[0] ada.
+    // TODO: upload gambar ke Storage (fieldImage) jika mau
 
     try {
       if (id) {
@@ -1078,13 +1063,13 @@ async function initActivitiesPage(currentUserRole) {
     }
   });
 
-  // Event aksi di tabel (edit / delete)
   tableBody.addEventListener("click", async (e) => {
-    const editBtn = e.target.closest("[data-action='edit-activity']");
-    const deleteBtn = e.target.closest("[data-action='delete-activity']");
     const row = e.target.closest("tr");
     if (!row) return;
+
     const id = row.dataset.id;
+    const editBtn = e.target.closest("[data-action='edit-activity']");
+    const deleteBtn = e.target.closest("[data-action='delete-activity']");
 
     if (editBtn && canEdit) {
       const act = activitiesCache.find((a) => a.id === id);
@@ -1108,6 +1093,578 @@ async function initActivitiesPage(currentUserRole) {
     }
   });
 
-  // Load awal
   loadActivities();
+}
+
+// =====================================================
+// Halaman: dashboard/announcements/list.html (CRUD Pengumuman)
+// =====================================================
+async function initAnnouncementsPage(currentUserRole) {
+  const tableBody = document.getElementById("announcements-table-body");
+  const btnOpenModal = document.getElementById("btn-open-announcement-modal");
+  const modal = document.getElementById("announcement-modal");
+  const modalTitle = document.getElementById("announcement-modal-title");
+  const form = document.getElementById("announcement-form");
+
+  const fieldId = document.getElementById("announcement-id");
+  const fieldTitle = document.getElementById("announcement-title");
+  const fieldContent = document.getElementById("announcement-content");
+  const fieldDate = document.getElementById("announcement-date");
+  const fieldTarget = document.getElementById("announcement-target");
+  const fieldStatus = document.getElementById("announcement-status");
+  const fieldPinned = document.getElementById("announcement-pinned");
+
+  if (!tableBody || !modal || !form) return;
+
+  const isPengurus = [
+    "super_admin",
+    "ketua",
+    "wakil",
+    "sekretaris",
+    "bendahara",
+    "sie",
+  ].includes(currentUserRole);
+
+  if (!isPengurus && btnOpenModal) {
+    btnOpenModal.classList.add("hidden");
+  }
+
+  let announcementsCache = [];
+
+  function openModal(mode = "create", item = null) {
+    if (mode === "create") {
+      modalTitle.textContent = "Tambah Pengumuman";
+      fieldId.value = "";
+      fieldTitle.value = "";
+      fieldContent.value = "";
+      fieldDate.value = "";
+      fieldTarget.value = "all";
+      fieldStatus.value = "draft";
+      fieldPinned.checked = false;
+    } else if (mode === "edit" && item) {
+      modalTitle.textContent = "Edit Pengumuman";
+      fieldId.value = item.id || "";
+      fieldTitle.value = item.title || "";
+      fieldContent.value = item.content || "";
+      fieldDate.value = item.date || "";
+      fieldTarget.value = item.target || "all";
+      fieldStatus.value = item.status || "draft";
+      fieldPinned.checked = !!item.pinned;
+    }
+
+    modal.classList.remove("hidden");
+  }
+
+  function closeModal() {
+    modal.classList.add("hidden");
+  }
+
+  async function loadAnnouncements() {
+    tableBody.innerHTML = `
+      <tr>
+        <td colspan="5" class="px-4 py-4 text-center text-xs text-slate-500">
+          Memuat data pengumuman...
+        </td>
+      </tr>
+    `;
+
+    try {
+      const snap = await getDocs(collection(db, "announcements"));
+      const list = [];
+      snap.forEach((docSnap) => {
+        const data = docSnap.data() || {};
+        list.push({
+          id: docSnap.id,
+          title: data.title || data.judul || "Tanpa Judul",
+          content: data.content || data.isi || "",
+          date: data.date || data.tanggal || "",
+          target: data.target || "all",
+          status: data.status || "draft",
+          pinned: !!data.pinned,
+          createdAt: data.createdAt || null,
+        });
+      });
+
+      list.sort((a, b) => {
+        if (a.pinned && !b.pinned) return -1;
+        if (!a.pinned && b.pinned) return 1;
+        const da = a.createdAt ? new Date(a.createdAt) : new Date(0);
+        const db = b.createdAt ? new Date(b.createdAt) : new Date(0);
+        return db - da;
+      });
+
+      announcementsCache = list;
+      renderAnnouncements(list);
+    } catch (e) {
+      console.error("Gagal memuat pengumuman:", e);
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="5" class="px-4 py-4 text-center text-xs text-red-400">
+            Gagal memuat data pengumuman. Cek koneksi atau Firestore rules.
+          </td>
+        </tr>
+      `;
+    }
+  }
+
+  function renderAnnouncements(list) {
+    tableBody.innerHTML = "";
+
+    if (!list.length) {
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="5" class="px-4 py-4 text-center text-xs text-slate-500">
+            Belum ada pengumuman tercatat.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    list.forEach((it) => {
+      const tr = document.createElement("tr");
+      tr.dataset.id = it.id;
+
+      const statusClassMap = {
+        draft: "bg-slate-700/70 text-slate-200 border-slate-500",
+        published: "bg-emerald-500/15 text-emerald-300 border-emerald-400/60",
+        archived: "bg-slate-700/70 text-slate-400 border-slate-500/70",
+      };
+      const stKey = (it.status || "draft").toLowerCase();
+      const statusClass = statusClassMap[stKey] || statusClassMap.draft;
+
+      let targetLabel = "Umum";
+      if (it.target === "anggota") targetLabel = "Anggota";
+      if (it.target === "pengurus") targetLabel = "Pengurus";
+
+      const shortContent =
+        (it.content || "").length > 80
+          ? it.content.slice(0, 80) + "..."
+          : it.content || "";
+
+      tr.innerHTML = `
+        <td class="py-2 pr-4 align-top">
+          <div class="flex flex-col gap-1">
+            <div class="flex items-center gap-1">
+              <span class="font-medium text-slate-50 text-xs md:text-sm">${it.title}</span>
+              ${
+                it.pinned
+                  ? '<span class="text-[0.65rem] px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-400/60">Pinned</span>'
+                  : ""
+              }
+            </div>
+            <span class="text-[0.7rem] text-slate-400 line-clamp-2">${shortContent}</span>
+          </div>
+        </td>
+        <td class="py-2 pr-4 align-top text-[0.75rem] text-slate-300">
+          ${it.date ? formatDateShort(it.date) : "-"}
+        </td>
+        <td class="py-2 pr-4 align-top text-[0.75rem] text-slate-200">
+          ${targetLabel}
+        </td>
+        <td class="py-2 pr-4 align-top">
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[0.7rem] border ${statusClass}">
+            ${it.status}
+          </span>
+        </td>
+        <td class="py-2 pr-0 align-top text-right">
+          <div class="inline-flex gap-2 text-[0.7rem]">
+            ${
+              isPengurus
+                ? `<button
+                     class="px-2 py-1 rounded-md bg-slate-800/70 border border-slate-600 hover:bg-slate-700/80 transition-colors"
+                     data-action="edit-announcement"
+                   >Edit</button>
+                   <button
+                     class="px-2 py-1 rounded-md bg-rose-600/20 border border-rose-500/60 text-rose-200 hover:bg-rose-600/30 transition-colors"
+                     data-action="delete-announcement"
+                   >Hapus</button>`
+                : ""
+            }
+          </div>
+        </td>
+      `;
+
+      tableBody.appendChild(tr);
+    });
+  }
+
+  if (btnOpenModal && isPengurus) {
+    btnOpenModal.addEventListener("click", () => openModal("create"));
+  }
+
+  modal.querySelectorAll("[data-close-modal], .modal-backdrop").forEach((el) => {
+    el.addEventListener("click", () => closeModal());
+  });
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    if (!isPengurus) {
+      alert("Kamu tidak memiliki izin untuk mengubah pengumuman.");
+      return;
+    }
+
+    const id = fieldId.value || null;
+    const title = fieldTitle.value.trim();
+    const content = fieldContent.value.trim();
+    const date = fieldDate.value;
+    const target = fieldTarget.value || "all";
+    const status = fieldStatus.value || "draft";
+    const pinned = fieldPinned.checked;
+
+    if (!title || !content) {
+      alert("Judul dan isi pengumuman wajib diisi.");
+      return;
+    }
+
+    const payload = {
+      title,
+      content,
+      date,
+      target,
+      status,
+      pinned,
+      updatedAt: new Date().toISOString(),
+    };
+
+    if (window.KARTEJI_USER) {
+      payload.updatedBy = window.KARTEJI_USER.uid;
+      if (!id) {
+        payload.createdAt = new Date().toISOString();
+        payload.createdBy = window.KARTEJI_USER.uid;
+      }
+    }
+
+    try {
+      if (id) {
+        await updateDoc(doc(db, "announcements", id), payload);
+      } else {
+        await addDoc(collection(db, "announcements"), payload);
+      }
+
+      closeModal();
+      await loadAnnouncements();
+    } catch (e) {
+      console.error("Gagal menyimpan pengumuman:", e);
+      alert("Gagal menyimpan pengumuman. Cek koneksi atau Firestore rules.");
+    }
+  });
+
+  tableBody.addEventListener("click", async (e) => {
+    const row = e.target.closest("tr");
+    if (!row) return;
+
+    const id = row.dataset.id;
+    const editBtn = e.target.closest("[data-action='edit-announcement']");
+    const deleteBtn = e.target.closest("[data-action='delete-announcement']");
+
+    if (editBtn && isPengurus) {
+      const item = announcementsCache.find((a) => a.id === id);
+      if (!item) return;
+      openModal("edit", item);
+    }
+
+    if (deleteBtn && isPengurus) {
+      const item = announcementsCache.find((a) => a.id === id);
+      const title = item?.title || "pengumuman ini";
+      const ok = confirm(`Yakin ingin menghapus ${title}?`);
+      if (!ok) return;
+
+      try {
+        await deleteDoc(doc(db, "announcements", id));
+        await loadAnnouncements();
+      } catch (e) {
+        console.error("Gagal menghapus pengumuman:", e);
+        alert("Gagal menghapus pengumuman. Cek koneksi atau Firestore rules.");
+      }
+    }
+  });
+
+  loadAnnouncements();
+}
+
+// =====================================================
+// Halaman: dashboard/finances/list.html (CRUD Kas)
+// =====================================================
+async function initFinancesPage(currentUserRole) {
+  const tableBody = document.getElementById("finances-table-body");
+  const btnOpenModal = document.getElementById("btn-open-finance-modal");
+  const modal = document.getElementById("finance-modal");
+  const modalTitle = document.getElementById("finance-modal-title");
+  const form = document.getElementById("finance-form");
+  const balanceEl = document.getElementById("finance-current-balance");
+
+  const fieldId = document.getElementById("finance-id");
+  const fieldDate = document.getElementById("finance-date");
+  const fieldType = document.getElementById("finance-type");
+  const fieldAmount = document.getElementById("finance-amount");
+  const fieldCategory = document.getElementById("finance-category");
+  const fieldRef = document.getElementById("finance-ref");
+  const fieldDesc = document.getElementById("finance-description");
+
+  if (!tableBody || !modal || !form) return;
+
+  const canManage = ["super_admin", "bendahara"].includes(currentUserRole);
+
+  if (!canManage && btnOpenModal) {
+    btnOpenModal.classList.add("hidden");
+  }
+
+  let financeCache = [];
+
+  function openModal(mode = "create", item = null) {
+    if (mode === "create") {
+      modalTitle.textContent = "Tambah Transaksi";
+      fieldId.value = "";
+      fieldDate.value = "";
+      fieldType.value = "in";
+      fieldAmount.value = "";
+      fieldCategory.value = "";
+      fieldRef.value = "";
+      fieldDesc.value = "";
+    } else if (mode === "edit" && item) {
+      modalTitle.textContent = "Edit Transaksi";
+      fieldId.value = item.id || "";
+      fieldDate.value = item.date || "";
+      fieldType.value = item.type || "in";
+      fieldAmount.value = item.amount || "";
+      fieldCategory.value = item.category || "";
+      fieldRef.value = item.reference || "";
+      fieldDesc.value = item.description || "";
+    }
+
+    modal.classList.remove("hidden");
+  }
+
+  function closeModal() {
+    modal.classList.add("hidden");
+  }
+
+  async function loadFinances() {
+    tableBody.innerHTML = `
+      <tr>
+        <td colspan="6" class="px-4 py-4 text-center text-xs text-slate-500">
+          Memuat data transaksi...
+        </td>
+      </tr>
+    `;
+
+    try {
+      const snap = await getDocs(collection(db, "financial_records"));
+      const list = [];
+      let balance = 0;
+
+      snap.forEach((docSnap) => {
+        const data = docSnap.data() || {};
+        const amount = Number(data.amount) || 0;
+        const typeRaw = (data.type || "").toString().toLowerCase();
+        const isIncome = ["in", "income", "masuk", "pemasukan"].includes(typeRaw);
+        const isExpense = ["out", "expense", "keluar", "pengeluaran"].includes(typeRaw);
+
+        if (isIncome) balance += amount;
+        else if (isExpense) balance -= amount;
+
+        list.push({
+          id: docSnap.id,
+          date: data.date || data.tanggal || "",
+          type: isExpense ? "out" : "in",
+          amount,
+          category: data.category || "",
+          reference: data.reference || data.ref || "",
+          description: data.description || data.keterangan || "",
+          createdAt: data.createdAt || null,
+        });
+      });
+
+      list.sort((a, b) => {
+        const da = a.date
+          ? new Date(a.date)
+          : a.createdAt
+          ? new Date(a.createdAt)
+          : new Date(0);
+        const db = b.date
+          ? new Date(b.date)
+          : b.createdAt
+          ? new Date(b.createdAt)
+          : new Date(0);
+        return db - da;
+      });
+
+      financeCache = list;
+      renderFinances(list);
+      if (balanceEl) balanceEl.textContent = formatRupiah(balance);
+    } catch (e) {
+      console.error("Gagal memuat finances:", e);
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="6" class="px-4 py-4 text-center text-xs text-red-400">
+            Gagal memuat data kas. Cek koneksi atau Firestore rules.
+          </td>
+        </tr>
+      `;
+      if (balanceEl) balanceEl.textContent = "-";
+    }
+  }
+
+  function renderFinances(list) {
+    tableBody.innerHTML = "";
+
+    if (!list.length) {
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="6" class="px-4 py-4 text-center text-xs text-slate-500">
+            Belum ada transaksi tercatat.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    list.forEach((it) => {
+      const tr = document.createElement("tr");
+      tr.dataset.id = it.id;
+
+      const isIncome = it.type === "in";
+      const typeLabel = isIncome ? "Masuk" : "Keluar";
+      const amountClass = isIncome ? "text-emerald-300" : "text-rose-300";
+
+      tr.innerHTML = `
+        <td class="py-2 pr-4 align-top text-[0.75rem] text-slate-300">
+          ${it.date ? formatDateShort(it.date) : "-"}
+        </td>
+        <td class="py-2 pr-4 align-top text-[0.75rem] text-slate-200">
+          <span class="block">${it.description || "-"}</span>
+          ${
+            it.reference
+              ? `<span class="block text-slate-400 text-[0.7rem]">Ref: ${it.reference}</span>`
+              : ""
+          }
+        </td>
+        <td class="py-2 pr-4 align-top text-[0.75rem] text-slate-200">
+          ${it.category || "-"}
+        </td>
+        <td class="py-2 pr-4 align-top text-[0.75rem] ${
+          isIncome ? "text-emerald-300" : "text-rose-300"
+        }">
+          ${typeLabel}
+        </td>
+        <td class="py-2 pr-4 align-top text-right text-[0.75rem] ${amountClass}">
+          ${formatRupiah(it.amount)}
+        </td>
+        <td class="py-2 pr-0 align-top text-right">
+          <div class="inline-flex gap-2 text-[0.7rem]">
+            ${
+              canManage
+                ? `<button
+                     class="px-2 py-1 rounded-md bg-slate-800/70 border border-slate-600 hover:bg-slate-700/80 transition-colors"
+                     data-action="edit-finance"
+                   >Edit</button>
+                   <button
+                     class="px-2 py-1 rounded-md bg-rose-600/20 border border-rose-500/60 text-rose-200 hover:bg-rose-600/30 transition-colors"
+                     data-action="delete-finance"
+                   >Hapus</button>`
+                : ""
+            }
+          </div>
+        </td>
+      `;
+
+      tableBody.appendChild(tr);
+    });
+  }
+
+  if (btnOpenModal && canManage) {
+    btnOpenModal.addEventListener("click", () => openModal("create"));
+  }
+
+  modal.querySelectorAll("[data-close-modal], .modal-backdrop").forEach((el) => {
+    el.addEventListener("click", () => closeModal());
+  });
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    if (!canManage) {
+      alert("Hanya Super Admin dan Bendahara yang boleh mengelola kas.");
+      return;
+    }
+
+    const id = fieldId.value || null;
+    const date = fieldDate.value;
+    const type = fieldType.value === "out" ? "out" : "in";
+    const amount = Number(fieldAmount.value || 0);
+    const category = fieldCategory.value.trim();
+    const reference = fieldRef.value.trim();
+    const description = fieldDesc.value.trim();
+
+    if (!date || !amount || amount <= 0) {
+      alert("Tanggal dan jumlah transaksi wajib diisi dengan benar.");
+      return;
+    }
+
+    const payload = {
+      date,
+      type,
+      amount,
+      category,
+      reference,
+      description,
+      updatedAt: new Date().toISOString(),
+    };
+
+    if (window.KARTEJI_USER) {
+      payload.updatedBy = window.KARTEJI_USER.uid;
+      if (!id) {
+        payload.createdAt = new Date().toISOString();
+        payload.createdBy = window.KARTEJI_USER.uid;
+      }
+    }
+
+    try {
+      if (id) {
+        await updateDoc(doc(db, "financial_records", id), payload);
+      } else {
+        await addDoc(collection(db, "financial_records"), payload);
+      }
+
+      closeModal();
+      await loadFinances();
+    } catch (e) {
+      console.error("Gagal menyimpan transaksi:", e);
+      alert("Gagal menyimpan transaksi. Cek koneksi atau Firestore rules.");
+    }
+  });
+
+  tableBody.addEventListener("click", async (e) => {
+    const row = e.target.closest("tr");
+    if (!row) return;
+
+    const id = row.dataset.id;
+    const editBtn = e.target.closest("[data-action='edit-finance']");
+    const deleteBtn = e.target.closest("[data-action='delete-finance']");
+
+    if (editBtn && canManage) {
+      const item = financeCache.find((a) => a.id === id);
+      if (!item) return;
+      openModal("edit", item);
+    }
+
+    if (deleteBtn && canManage) {
+      const item = financeCache.find((a) => a.id === id);
+      const label = item?.description || "transaksi ini";
+      const ok = confirm(`Yakin ingin menghapus ${label}?`);
+      if (!ok) return;
+
+      try {
+        await deleteDoc(doc(db, "financial_records", id));
+        await loadFinances();
+      } catch (e) {
+        console.error("Gagal menghapus transaksi:", e);
+        alert("Gagal menghapus transaksi. Cek koneksi atau Firestore rules.");
+      }
+    }
+  });
+
+  loadFinances();
 }
