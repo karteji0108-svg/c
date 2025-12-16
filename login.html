@@ -1,220 +1,77 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Masuk - KARTEJI</title>
+<!-- TARUH script ini DI BAWAH (sebelum </body>) menggantikan script login localStorage kamu -->
+<script type="module">
+  // Firebase SDK (v9+ modular)
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
 
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@48,400,0,0" />
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+  // 1) WAJIB: ganti pakai config punyamu
+  const firebaseConfig = {
+    apiKey: "ISI_API_KEY",
+    authDomain: "ISI_AUTH_DOMAIN",
+    projectId: "ISI_PROJECT_ID",
+    appId: "ISI_APP_ID",
+  };
 
-  <style>
-    body { font-family: 'Outfit', sans-serif; }
+  // 2) Init
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
 
-    /* Background Animation (Konsisten) */
-    .bg-gradient-animate {
-      background: linear-gradient(-45deg, #0f172a, #1e293b, #0c4a6e, #1e1b4b);
-      background-size: 400% 400%;
-      animation: gradientBG 15s ease infinite;
+  // 3) Toast helper (pakai punyamu)
+  function showToast(type, message = '') {
+    const successToast = document.getElementById('toast-success');
+    const errorToast = document.getElementById('toast-error');
+
+    if (type === 'success') {
+      successToast.classList.remove('translate-y-[-150%]');
+      setTimeout(() => successToast.classList.add('translate-y-[-150%]'), 3000);
+    } else {
+      document.getElementById('error-message').innerText = message;
+      errorToast.classList.remove('translate-y-[-150%]');
+      setTimeout(() => errorToast.classList.add('translate-y-[-150%]'), 3000);
     }
-    @keyframes gradientBG {
-      0% { background-position: 0% 50%; }
-      50% { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
+  }
 
-    /* Glass Effect */
-    .glass {
-      background: rgba(255, 255, 255, 0.03);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-    }
+  // 4) Login handler (Firebase Auth)
+  document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
 
-    /* Input Autofill Fix (Agar tidak putih saat di-autofill browser) */
-    input:-webkit-autofill,
-    input:-webkit-autofill:hover, 
-    input:-webkit-autofill:focus, 
-    input:-webkit-autofill:active{
-        -webkit-box-shadow: 0 0 0 30px #1e293b inset !important;
-        -webkit-text-fill-color: white !important;
-        transition: background-color 5000s ease-in-out 0s;
-    }
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    const btn = document.getElementById('btn-submit');
+    const originalBtnText = btn.innerHTML;
 
-    /* Animation Utilities */
-    .slide-up { animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; transform: translateY(20px); }
-    .delay-100 { animation-delay: 0.1s; }
-    .delay-200 { animation-delay: 0.2s; }
-    
-    @keyframes slideUp { to { transform: translateY(0); opacity: 1; } }
-  </style>
-</head>
-<body class="bg-slate-950 text-white min-h-screen flex items-center justify-center p-4 bg-gradient-animate relative overflow-hidden">
+    btn.disabled = true;
+    btn.innerHTML = `<span class="animate-spin border-2 border-white/30 border-t-white rounded-full w-5 h-5"></span>`;
 
-  <a href="index.html" class="absolute top-6 left-6 p-2 rounded-full glass hover:bg-white/10 transition-colors z-20">
-    <span class="material-symbols-rounded text-slate-300 block">arrow_back</span>
-  </a>
+    try {
+      const cred = await signInWithEmailAndPassword(auth, email, password);
 
-  <div class="absolute bottom-1/4 right-1/2 translate-x-1/2 w-72 h-72 bg-indigo-500/20 blur-[100px] rounded-full pointer-events-none"></div>
+      // Simpan user minimal di localStorage kalau mau (opsional)
+      localStorage.setItem('current_karteji_user', JSON.stringify({
+        uid: cred.user.uid,
+        email: cred.user.email
+      }));
 
-  <main class="w-full max-w-md relative z-10">
-    <div class="glass rounded-3xl p-8 slide-up">
-      
-      <div class="text-center mb-8">
-        <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-sky-500/10 mb-4 ring-1 ring-sky-500/30">
-          <span class="material-symbols-rounded text-sky-400">waving_hand</span>
-        </div>
-        <h1 class="text-2xl font-bold text-white">
-          Selamat Datang Kembali
-        </h1>
-        <p class="text-slate-400 text-sm mt-1">Masuk untuk mengakses KARTEJI</p>
-      </div>
+      showToast('success');
 
-      <form id="login-form" class="space-y-5 slide-up delay-100">
-        
-        <div class="space-y-1">
-          <label class="text-xs font-semibold text-slate-300 ml-1">Email</label>
-          <div class="relative group">
-            <span class="material-symbols-rounded absolute left-4 top-3.5 text-slate-500 group-focus-within:text-sky-400 transition-colors">mail</span>
-            <input 
-              type="email" 
-              id="login-email"
-              required
-              class="w-full bg-slate-800/50 border border-slate-700/50 text-white text-sm rounded-xl px-4 pl-12 py-3.5 focus:outline-none focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500 transition-all placeholder:text-slate-600"
-              placeholder="nama@email.com"
-            >
-          </div>
-        </div>
-
-        <div class="space-y-1">
-          <div class="flex justify-between items-center ml-1">
-            <label class="text-xs font-semibold text-slate-300">Password</label>
-            <a href="#" class="text-xs text-sky-400 hover:text-sky-300">Lupa password?</a>
-          </div>
-          <div class="relative group">
-            <span class="material-symbols-rounded absolute left-4 top-3.5 text-slate-500 group-focus-within:text-sky-400 transition-colors">lock</span>
-            <input 
-              type="password" 
-              id="login-password"
-              required
-              class="w-full bg-slate-800/50 border border-slate-700/50 text-white text-sm rounded-xl px-4 pl-12 py-3.5 focus:outline-none focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500 transition-all placeholder:text-slate-600"
-              placeholder="••••••••"
-            >
-            <button type="button" onclick="togglePassword()" class="absolute right-4 top-3.5 text-slate-500 hover:text-slate-300 transition-colors">
-              <span id="eye-icon" class="material-symbols-rounded text-lg">visibility</span>
-            </button>
-          </div>
-        </div>
-
-        <button 
-          id="btn-submit"
-          type="submit" 
-          class="w-full bg-gradient-to-r from-sky-500 to-indigo-600 hover:from-sky-400 hover:to-indigo-500 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-sky-900/50 transition-all active:scale-95 flex items-center justify-center gap-2 mt-4"
-        >
-          <span>Masuk</span>
-          <span class="material-symbols-rounded">login</span>
-        </button>
-
-      </form>
-
-      <div class="mt-8 text-center slide-up delay-200">
-        <p class="text-slate-400 text-sm">
-          Belum punya akun? 
-          <a href="register.html" class="text-sky-400 hover:text-sky-300 font-semibold transition-colors">Daftar Sekarang</a>
-        </p>
-      </div>
-
-    </div>
-  </main>
-
-  <div id="toast-success" class="fixed top-5 right-5 bg-emerald-500 text-white px-5 py-3 rounded-xl shadow-2xl transform translate-y-[-150%] transition-transform duration-300 flex items-center gap-3 z-50">
-    <span class="material-symbols-rounded bg-white/20 rounded-full p-1 text-sm">check</span>
-    <div>
-      <h4 class="font-bold text-sm">Login Berhasil</h4>
-      <p class="text-[10px] text-emerald-100">Mengalihkan ke dashboard...</p>
-    </div>
-  </div>
-
-  <div id="toast-error" class="fixed top-5 right-5 bg-rose-500 text-white px-5 py-3 rounded-xl shadow-2xl transform translate-y-[-150%] transition-transform duration-300 flex items-center gap-3 z-50">
-    <span class="material-symbols-rounded bg-white/20 rounded-full p-1 text-sm">priority_high</span>
-    <div>
-      <h4 class="font-bold text-sm">Gagal Masuk</h4>
-      <p class="text-[10px] text-rose-100" id="error-message">Email atau password salah.</p>
-    </div>
-  </div>
-
-  <script>
-    // 1. Toggle Password
-    function togglePassword() {
-      const input = document.getElementById('login-password');
-      const icon = document.getElementById('eye-icon');
-      if (input.type === 'password') {
-        input.type = 'text';
-        icon.innerText = 'visibility_off';
-      } else {
-        input.type = 'password';
-        icon.innerText = 'visibility';
-      }
-    }
-
-    // 2. Helper Toast Function
-    function showToast(type, message = '') {
-      const successToast = document.getElementById('toast-success');
-      const errorToast = document.getElementById('toast-error');
-      
-      if (type === 'success') {
-        successToast.classList.remove('translate-y-[-150%]');
-        setTimeout(() => successToast.classList.add('translate-y-[-150%]'), 3000);
-      } else {
-        document.getElementById('error-message').innerText = message;
-        errorToast.classList.remove('translate-y-[-150%]');
-        setTimeout(() => errorToast.classList.add('translate-y-[-150%]'), 3000);
-      }
-    }
-
-    // 3. Handle Login Logic
-    document.getElementById('login-form').addEventListener('submit', function(e) {
-      e.preventDefault();
-      
-      const email = document.getElementById('login-email').value;
-      const password = document.getElementById('login-password').value;
-      const btn = document.getElementById('btn-submit');
-      const originalBtnText = btn.innerHTML;
-
-      // Efek Loading pada Tombol
-      btn.disabled = true;
-      btn.innerHTML = `<span class="animate-spin border-2 border-white/30 border-t-white rounded-full w-5 h-5"></span>`;
-
-      // Simulasi delay jaringan (0.8 detik)
       setTimeout(() => {
-        // Ambil data user dari LocalStorage (disimpan saat Register)
-        const users = JSON.parse(localStorage.getItem('karteji_users')) || [];
-        
-        // Cari user yang cocok
-        const user = users.find(u => u.email === email && u.password === password);
+        window.location.href = 'dashboard.html';
+      }, 1200);
 
-        if (user) {
-          // Login Sukses
-          showToast('success');
-          
-          // Simpan sesi login user saat ini
-          localStorage.setItem('current_karteji_user', JSON.stringify(user));
-          
-          // Redirect ke Dashboard (Pastikan file dashboard.html nanti dibuat)
-          setTimeout(() => {
-            window.location.href = 'dashboard.html';
-          }, 1500);
+    } catch (err) {
+      // Mapping error biar enak dibaca
+      let msg = "Gagal login.";
+      if (err.code === "auth/invalid-credential") msg = "Email atau password salah.";
+      if (err.code === "auth/user-not-found") msg = "Akun tidak ditemukan.";
+      if (err.code === "auth/wrong-password") msg = "Password salah.";
+      if (err.code === "auth/too-many-requests") msg = "Terlalu banyak percobaan. Coba lagi nanti.";
+      if (err.code === "auth/network-request-failed") msg = "Jaringan bermasalah / diblokir.";
 
-        } else {
-          // Login Gagal
-          showToast('error', 'Email atau password salah!');
-          btn.disabled = false;
-          btn.innerHTML = originalBtnText;
-        }
-      }, 800);
-    });
-  </script>
-</body>
-</html>
+      showToast('error', msg);
+      btn.disabled = false;
+      btn.innerHTML = originalBtnText;
+
+      console.error("Firebase login error:", err);
+    }
+  });
+</script>
