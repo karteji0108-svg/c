@@ -12,7 +12,6 @@
   <style>
     body { font-family: 'Outfit', sans-serif; }
 
-    /* Background Animation (Konsisten dengan halaman depan) */
     .bg-gradient-animate {
       background: linear-gradient(-45deg, #0f172a, #1e293b, #0c4a6e, #1e1b4b);
       background-size: 400% 400%;
@@ -24,7 +23,6 @@
       100% { background-position: 0% 50%; }
     }
 
-    /* Glass Effect */
     .glass {
       background: rgba(255, 255, 255, 0.03);
       backdrop-filter: blur(16px);
@@ -33,24 +31,22 @@
       box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
     }
 
-    /* Input Autofill Fix for Dark Mode */
     input:-webkit-autofill,
-    input:-webkit-autofill:hover, 
-    input:-webkit-autofill:focus, 
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus,
     input:-webkit-autofill:active{
-        -webkit-box-shadow: 0 0 0 30px #1e293b inset !important;
-        -webkit-text-fill-color: white !important;
-        transition: background-color 5000s ease-in-out 0s;
+      -webkit-box-shadow: 0 0 0 30px #1e293b inset !important;
+      -webkit-text-fill-color: white !important;
+      transition: background-color 5000s ease-in-out 0s;
     }
 
-    /* Animation Utilities */
     .slide-up { animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; transform: translateY(20px); }
     .delay-100 { animation-delay: 0.1s; }
     .delay-200 { animation-delay: 0.2s; }
-    
     @keyframes slideUp { to { transform: translateY(0); opacity: 1; } }
   </style>
 </head>
+
 <body class="bg-slate-950 text-white min-h-screen flex items-center justify-center p-4 bg-gradient-animate relative overflow-hidden">
 
   <a href="index.html" class="absolute top-6 left-6 p-2 rounded-full glass hover:bg-white/10 transition-colors z-20">
@@ -61,7 +57,7 @@
 
   <main class="w-full max-w-md relative z-10">
     <div class="glass rounded-3xl p-8 slide-up">
-      
+
       <div class="text-center mb-8">
         <h1 class="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-indigo-400">
           Buat Akun
@@ -77,13 +73,13 @@
       </div>
 
       <form id="register-form" class="space-y-5 slide-up delay-200">
-        
+
         <div class="space-y-1">
           <label class="text-xs font-semibold text-slate-300 ml-1">Nama Lengkap</label>
           <div class="relative group">
             <span class="material-symbols-rounded absolute left-4 top-3.5 text-slate-500 group-focus-within:text-sky-400 transition-colors">person</span>
-            <input 
-              type="text" 
+            <input
+              type="text"
               id="register-name"
               required
               class="w-full bg-slate-800/50 border border-slate-700/50 text-white text-sm rounded-xl px-4 pl-12 py-3.5 focus:outline-none focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500 transition-all placeholder:text-slate-600"
@@ -96,8 +92,8 @@
           <label class="text-xs font-semibold text-slate-300 ml-1">Email</label>
           <div class="relative group">
             <span class="material-symbols-rounded absolute left-4 top-3.5 text-slate-500 group-focus-within:text-sky-400 transition-colors">mail</span>
-            <input 
-              type="email" 
+            <input
+              type="email"
               id="register-email"
               required
               class="w-full bg-slate-800/50 border border-slate-700/50 text-white text-sm rounded-xl px-4 pl-12 py-3.5 focus:outline-none focus:ring-2 focus:ring-sky-500/50 focus:border-sky-500 transition-all placeholder:text-slate-600"
@@ -110,8 +106,8 @@
           <label class="text-xs font-semibold text-slate-300 ml-1">Password</label>
           <div class="relative group">
             <span class="material-symbols-rounded absolute left-4 top-3.5 text-slate-500 group-focus-within:text-sky-400 transition-colors">lock</span>
-            <input 
-              type="password" 
+            <input
+              type="password"
               id="register-password"
               required
               minlength="6"
@@ -122,10 +118,12 @@
               <span id="eye-icon" class="material-symbols-rounded text-lg">visibility</span>
             </button>
           </div>
+          <p class="text-[11px] text-slate-500 ml-1">Tips: gunakan kombinasi huruf & angka biar lebih aman.</p>
         </div>
 
-        <button 
-          type="submit" 
+        <button
+          id="btn-register"
+          type="submit"
           class="w-full bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-sky-900/50 transition-all active:scale-95 flex items-center justify-center gap-2 mt-2"
         >
           <span>Daftar Sekarang</span>
@@ -136,7 +134,7 @@
 
       <div class="mt-8 text-center slide-up delay-200">
         <p class="text-slate-400 text-sm">
-          Sudah punya akun? 
+          Sudah punya akun?
           <a href="login.html" class="text-sky-400 hover:text-sky-300 font-semibold transition-colors">Masuk di sini</a>
         </p>
       </div>
@@ -144,6 +142,7 @@
     </div>
   </main>
 
+  <!-- Toast Success -->
   <div id="toast" class="fixed top-5 right-5 bg-emerald-500 text-white px-6 py-4 rounded-xl shadow-2xl transform translate-y-[-150%] transition-transform duration-300 flex items-center gap-3 z-50">
     <span class="material-symbols-rounded bg-white/20 rounded-full p-1">check</span>
     <div>
@@ -152,8 +151,17 @@
     </div>
   </div>
 
+  <!-- Toast Error -->
+  <div id="toast-error" class="fixed top-5 right-5 bg-rose-500 text-white px-6 py-4 rounded-xl shadow-2xl transform translate-y-[-150%] transition-transform duration-300 flex items-center gap-3 z-50">
+    <span class="material-symbols-rounded bg-white/20 rounded-full p-1">priority_high</span>
+    <div>
+      <h4 class="font-bold text-sm">Gagal Daftar</h4>
+      <p class="text-xs text-rose-100" id="error-message">Terjadi kesalahan.</p>
+    </div>
+  </div>
+
   <script>
-    // 1. Toggle Password Visibility
+    // Toggle Password Visibility (UI tetap sama)
     function togglePassword() {
       const input = document.getElementById('register-password');
       const icon = document.getElementById('eye-icon');
@@ -166,60 +174,123 @@
       }
     }
 
-    // 2. Handle Register Logic
-    document.getElementById('register-form').addEventListener('submit', function(e) {
-      e.preventDefault();
-      
-      const name = document.getElementById('register-name').value;
-      const email = document.getElementById('register-email').value;
-      const password = document.getElementById('register-password').value;
-
-      // Ambil data users yang sudah ada
-      const users = JSON.parse(localStorage.getItem('karteji_users')) || [];
-      
-      // Cek apakah email sudah terdaftar
-      const existingUser = users.find(u => u.email === email);
-      if (existingUser) {
-        alert('Email ini sudah terdaftar. Silakan gunakan email lain atau login.');
-        return;
-      }
-
-      // Tentukan Role
-      // Jika array kosong, maka dia user pertama -> super_admin
-      // Jika tidak, member
-      let role = 'member';
-      let roleName = 'Anggota';
-      
-      if (users.length === 0) {
-        role = 'super_admin';
-        roleName = 'Super Admin';
-      }
-
-      // Buat object user baru
-      const newUser = {
-        id: Date.now(), // simple ID
-        name: name,
-        email: email,
-        password: password, // Note: In real app, never store plain text password!
-        role: role,
-        joinedAt: new Date().toISOString()
-      };
-
-      // Simpan
-      users.push(newUser);
-      localStorage.setItem('karteji_users', JSON.stringify(users));
-
-      // Show Toast & Redirect
+    // Toast helper
+    function showToast(type, message = '') {
       const toast = document.getElementById('toast');
       const toastMsg = document.getElementById('toast-message');
-      
-      toastMsg.innerText = `Halo ${roleName}, silakan login.`;
-      toast.classList.remove('translate-y-[-150%]');
-      
-      setTimeout(() => {
-        window.location.href = 'login.html';
-      }, 2000);
+
+      const errToast = document.getElementById('toast-error');
+      const errMsg = document.getElementById('error-message');
+
+      if (type === 'success') {
+        toastMsg.innerText = message || 'Mengalihkan...';
+        toast.classList.remove('translate-y-[-150%]');
+        setTimeout(() => toast.classList.add('translate-y-[-150%]'), 3000);
+      } else {
+        errMsg.innerText = message || 'Terjadi kesalahan.';
+        errToast.classList.remove('translate-y-[-150%]');
+        setTimeout(() => errToast.classList.add('translate-y-[-150%]'), 3500);
+      }
+    }
+  </script>
+
+  <!-- ================= FIREBASE REGISTER (AUTH + FIRESTORE) ================= -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
+    import {
+      getFirestore,
+      doc,
+      setDoc,
+      collection,
+      query,
+      limit,
+      getDocs,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
+
+    // 🔥 Config punyamu
+    const firebaseConfig = {
+      apiKey: "AIzaSyAQxpD7ea9gHWGiU3wYXr0XHyl-SNyFYNs",
+      authDomain: "katar-9cac3.firebaseapp.com",
+      projectId: "katar-9cac3",
+      storageBucket: "katar-9cac3.firebasestorage.app",
+      messagingSenderId: "1017734829960",
+      appId: "1:1017734829960:web:6b02b7176f08a23ce28c3d",
+      measurementId: "G-M4F9J10TTE"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const form = document.getElementById('register-form');
+    const btn = document.getElementById('btn-register');
+
+    function mapAuthError(code) {
+      if (code === "auth/email-already-in-use") return "Email sudah terdaftar. Silakan login.";
+      if (code === "auth/invalid-email") return "Format email tidak valid.";
+      if (code === "auth/weak-password") return "Password terlalu lemah. Minimal 6 karakter.";
+      if (code === "auth/network-request-failed") return "Jaringan bermasalah. Coba lagi.";
+      return "Gagal mendaftar. Coba lagi.";
+    }
+
+    async function isFirstUser() {
+      // cek cepat: ambil 1 dokumen dari collection users
+      const q = query(collection(db, "users"), limit(1));
+      const snap = await getDocs(q);
+      return snap.empty;
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const name = document.getElementById('register-name').value.trim();
+      const email = document.getElementById('register-email').value.trim();
+      const password = document.getElementById('register-password').value;
+
+      const originalBtn = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = `<span class="animate-spin border-2 border-white/30 border-t-white rounded-full w-5 h-5"></span><span>Memproses...</span>`;
+
+      try {
+        // Tentukan role: pendaftar pertama jadi super_admin
+        const first = await isFirstUser();
+        const role = first ? "super_admin" : "member";
+        const roleName = first ? "Super Admin" : "Anggota";
+
+        // Buat akun Auth
+        const cred = await createUserWithEmailAndPassword(auth, email, password);
+
+        // Simpan profil user ke Firestore
+        await setDoc(doc(db, "users", cred.user.uid), {
+          uid: cred.user.uid,
+          name,
+          email,
+          role,
+          joinedAt: serverTimestamp()
+        });
+
+        // Simpan session ringan (opsional)
+        localStorage.setItem("karteji_user", JSON.stringify({
+          uid: cred.user.uid,
+          email: cred.user.email,
+          name,
+          role
+        }));
+
+        showToast("success", `Halo ${roleName}, silakan login.`);
+        setTimeout(() => window.location.href = "login.html", 1800);
+
+      } catch (err) {
+        console.error("Register error:", err);
+        showToast("error", mapAuthError(err.code));
+
+        btn.disabled = false;
+        btn.innerHTML = originalBtn;
+      }
     });
   </script>
+
 </body>
 </html>
