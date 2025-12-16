@@ -118,7 +118,6 @@
               <span id="eye-icon" class="material-symbols-rounded text-lg">visibility</span>
             </button>
           </div>
-          <p class="text-[11px] text-slate-500 ml-1">Tips: gunakan kombinasi huruf & angka biar lebih aman.</p>
         </div>
 
         <button
@@ -161,7 +160,7 @@
   </div>
 
   <script>
-    // Toggle Password Visibility (UI tetap sama)
+    // Toggle password
     function togglePassword() {
       const input = document.getElementById('register-password');
       const icon = document.getElementById('eye-icon');
@@ -194,7 +193,7 @@
     }
   </script>
 
-  <!-- ================= FIREBASE REGISTER (AUTH + FIRESTORE) ================= -->
+  <!-- Firebase Register -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
     import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
@@ -209,7 +208,6 @@
       serverTimestamp
     } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
 
-    // 🔥 Config punyamu
     const firebaseConfig = {
       apiKey: "AIzaSyAQxpD7ea9gHWGiU3wYXr0XHyl-SNyFYNs",
       authDomain: "katar-9cac3.firebaseapp.com",
@@ -224,8 +222,8 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    const form = document.getElementById('register-form');
-    const btn = document.getElementById('btn-register');
+    const form = document.getElementById("register-form");
+    const btn = document.getElementById("btn-register");
 
     function mapAuthError(code) {
       if (code === "auth/email-already-in-use") return "Email sudah terdaftar. Silakan login.";
@@ -236,33 +234,31 @@
     }
 
     async function isFirstUser() {
-      // cek cepat: ambil 1 dokumen dari collection users
       const q = query(collection(db, "users"), limit(1));
       const snap = await getDocs(q);
       return snap.empty;
     }
 
-    form.addEventListener('submit', async (e) => {
+    form.addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      const name = document.getElementById('register-name').value.trim();
-      const email = document.getElementById('register-email').value.trim();
-      const password = document.getElementById('register-password').value;
+      const name = document.getElementById("register-name").value.trim();
+      const email = document.getElementById("register-email").value.trim();
+      const password = document.getElementById("register-password").value;
 
       const originalBtn = btn.innerHTML;
       btn.disabled = true;
       btn.innerHTML = `<span class="animate-spin border-2 border-white/30 border-t-white rounded-full w-5 h-5"></span><span>Memproses...</span>`;
 
       try {
-        // Tentukan role: pendaftar pertama jadi super_admin
         const first = await isFirstUser();
         const role = first ? "super_admin" : "member";
         const roleName = first ? "Super Admin" : "Anggota";
 
-        // Buat akun Auth
+        // create auth user
         const cred = await createUserWithEmailAndPassword(auth, email, password);
 
-        // Simpan profil user ke Firestore
+        // save profile to firestore
         await setDoc(doc(db, "users", cred.user.uid), {
           uid: cred.user.uid,
           name,
@@ -271,7 +267,7 @@
           joinedAt: serverTimestamp()
         });
 
-        // Simpan session ringan (opsional)
+        // optional session cache
         localStorage.setItem("karteji_user", JSON.stringify({
           uid: cred.user.uid,
           email: cred.user.email,
@@ -283,9 +279,8 @@
         setTimeout(() => window.location.href = "login.html", 1800);
 
       } catch (err) {
-        console.error("Register error:", err);
+        console.error("REGISTER ERROR:", err);
         showToast("error", mapAuthError(err.code));
-
         btn.disabled = false;
         btn.innerHTML = originalBtn;
       }
