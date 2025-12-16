@@ -1,77 +1,124 @@
-<!-- TARUH script ini DI BAWAH (sebelum </body>) menggantikan script login localStorage kamu -->
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Masuk - KARTEJI</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+
+  <style>
+    body { font-family: 'Outfit', sans-serif; }
+    .bg-gradient-animate {
+      background: linear-gradient(-45deg, #0f172a, #1e293b, #0c4a6e, #1e1b4b);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+    }
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .glass {
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+  </style>
+</head>
+
+<body class="bg-slate-950 text-white min-h-screen flex items-center justify-center p-4 bg-gradient-animate">
+
+<main class="w-full max-w-md">
+  <div class="glass rounded-3xl p-8">
+
+    <h1 class="text-2xl font-bold text-center mb-2">Selamat Datang Kembali</h1>
+    <p class="text-center text-slate-400 mb-6">Masuk untuk mengakses KARTEJI</p>
+
+    <form id="login-form" class="space-y-4">
+      <input id="login-email" type="email" placeholder="Email"
+        class="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700" required>
+
+      <input id="login-password" type="password" placeholder="Password"
+        class="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700" required>
+
+      <button id="btn-submit"
+        class="w-full bg-sky-600 hover:bg-sky-500 py-3 rounded-xl font-bold transition">
+        Masuk
+      </button>
+    </form>
+
+  </div>
+</main>
+
+<!-- TOAST -->
+<div id="toast-error" class="fixed top-5 right-5 bg-rose-500 px-5 py-3 rounded-xl hidden">
+  <span id="error-message"></span>
+</div>
+
+<!-- ================= FIREBASE LOGIN ================= -->
 <script type="module">
-  // Firebase SDK (v9+ modular)
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
   import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-analytics.js";
 
-  // 1) WAJIB: ganti pakai config punyamu
+  // 🔥 Firebase Config (punyamu)
   const firebaseConfig = {
-    apiKey: "ISI_API_KEY",
-    authDomain: "ISI_AUTH_DOMAIN",
-    projectId: "ISI_PROJECT_ID",
-    appId: "ISI_APP_ID",
+    apiKey: "AIzaSyAQxpD7ea9gHWGiU3wYXr0XHyl-SNyFYNs",
+    authDomain: "katar-9cac3.firebaseapp.com",
+    projectId: "katar-9cac3",
+    storageBucket: "katar-9cac3.firebasestorage.app",
+    messagingSenderId: "1017734829960",
+    appId: "1:1017734829960:web:6b02b7176f08a23ce28c3d",
+    measurementId: "G-M4F9J10TTE"
   };
 
-  // 2) Init
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
+  getAnalytics(app);
 
-  // 3) Toast helper (pakai punyamu)
-  function showToast(type, message = '') {
-    const successToast = document.getElementById('toast-success');
-    const errorToast = document.getElementById('toast-error');
+  const form = document.getElementById("login-form");
+  const btn = document.getElementById("btn-submit");
+  const toast = document.getElementById("toast-error");
+  const errorText = document.getElementById("error-message");
 
-    if (type === 'success') {
-      successToast.classList.remove('translate-y-[-150%]');
-      setTimeout(() => successToast.classList.add('translate-y-[-150%]'), 3000);
-    } else {
-      document.getElementById('error-message').innerText = message;
-      errorToast.classList.remove('translate-y-[-150%]');
-      setTimeout(() => errorToast.classList.add('translate-y-[-150%]'), 3000);
-    }
-  }
-
-  // 4) Login handler (Firebase Auth)
-  document.getElementById('login-form').addEventListener('submit', async (e) => {
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const email = document.getElementById('login-email').value.trim();
-    const password = document.getElementById('login-password').value;
-    const btn = document.getElementById('btn-submit');
-    const originalBtnText = btn.innerHTML;
+    const email = login-email.value.trim();
+    const password = login-password.value;
 
     btn.disabled = true;
-    btn.innerHTML = `<span class="animate-spin border-2 border-white/30 border-t-white rounded-full w-5 h-5"></span>`;
+    btn.innerText = "Loading...";
 
     try {
       const cred = await signInWithEmailAndPassword(auth, email, password);
 
-      // Simpan user minimal di localStorage kalau mau (opsional)
-      localStorage.setItem('current_karteji_user', JSON.stringify({
+      // simpan session ringan
+      localStorage.setItem("karteji_user", JSON.stringify({
         uid: cred.user.uid,
         email: cred.user.email
       }));
 
-      showToast('success');
-
-      setTimeout(() => {
-        window.location.href = 'dashboard.html';
-      }, 1200);
+      window.location.href = "dashboard.html";
 
     } catch (err) {
-      // Mapping error biar enak dibaca
-      let msg = "Gagal login.";
-      if (err.code === "auth/invalid-credential") msg = "Email atau password salah.";
-      if (err.code === "auth/user-not-found") msg = "Akun tidak ditemukan.";
-      if (err.code === "auth/wrong-password") msg = "Password salah.";
-      if (err.code === "auth/too-many-requests") msg = "Terlalu banyak percobaan. Coba lagi nanti.";
-      if (err.code === "auth/network-request-failed") msg = "Jaringan bermasalah / diblokir.";
+      let msg = "Login gagal";
+      if (err.code === "auth/invalid-credential") msg = "Email atau password salah";
+      if (err.code === "auth/user-not-found") msg = "Akun tidak ditemukan";
+      if (err.code === "auth/network-request-failed") msg = "Masalah jaringan";
 
-      showToast('error', msg);
+      toast.classList.remove("hidden");
+      errorText.innerText = msg;
+
       btn.disabled = false;
-      btn.innerHTML = originalBtnText;
-
-      console.error("Firebase login error:", err);
+      btn.innerText = "Masuk";
+      console.error(err);
     }
   });
 </script>
+
+</body>
+</html>
